@@ -110,3 +110,56 @@ func (n *Node) SelfPath() string {
 	}
 	return ret
 }
+
+// Parent returns the parent of node
+func (n *Node) Parent() *Node {
+	if n == nil || n.parent == nil {
+		return undef
+	}
+	return n.parent
+}
+
+// Children returns node children
+func (n *Node) Children() []*Node {
+	if n == nil {
+		return nil
+	}
+	return n.children
+}
+
+// ChildrenKeys returns children keys if node is object
+func (n *Node) ChildrenKeys() []string {
+	if n == nil || n.kind != Object {
+		return nil
+	}
+	return n.keys
+}
+
+// ChildrenLength returns the length of node children
+func (n *Node) ChildrenLength() int {
+	if n == nil || n.kind != Object && n.kind != Array {
+		return 0
+	}
+	return len(n.children)
+}
+
+// Walk goes over tree and the pass is done when it returns undefined node
+func (n *Node) Walk() *Node {
+	if n == nil {
+		return undef
+	}
+	if (n.kind == Array || n.kind == Object) && len(n.children) > 0 {
+		return n.children[0]
+	}
+	node := n
+	for {
+		parent := node.parent
+		if parent == nil {
+			return undef
+		}
+		if len(parent.children)-1 > node.idx {
+			return parent.children[node.idx+1]
+		}
+		node = parent
+	}
+}

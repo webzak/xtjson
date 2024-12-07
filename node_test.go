@@ -89,6 +89,32 @@ func TestType(t *testing.T) {
 	assertEqual(t, Undefined, node.Type())
 }
 
+func TestSelfIdx(t *testing.T) {
+	node, err := Parse(`[1,2,3]`)
+	assertNil(t, err)
+	assertNotNil(t, node)
+	assertEqual(t, 0, node.SelfIdx())
+	assertEqual(t, 0, node.Idx(0).SelfIdx())
+	assertEqual(t, 1, node.Idx(1).SelfIdx())
+	assertEqual(t, 2, node.Idx(2).SelfIdx())
+	node = nil
+	assertEqual(t, 0, node.SelfIdx())
+	node = undef
+	assertEqual(t, 0, node.SelfIdx())
+}
+
+func TestSelfKey(t *testing.T) {
+	node, err := Parse(`{"foo": 123}`)
+	assertNil(t, err)
+	assertNotNil(t, node)
+	assertEqual(t, "", node.SelfKey())
+	assertEqual(t, "foo", node.Key("foo").SelfKey())
+	node = nil
+	assertEqual(t, "", node.SelfKey())
+	node = undef
+	assertEqual(t, "", node.SelfKey())
+}
+
 func TestIsNull(t *testing.T) {
 	node, err := Parse(`[123, null]`)
 	assertNil(t, err)

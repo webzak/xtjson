@@ -97,6 +97,22 @@ func (n *Node) Type() Type {
 	return n.kind
 }
 
+// SelfIdx returns the index of current node if it is a member of array
+func (n *Node) SelfIdx() int {
+	if n == nil || n.parent == nil || n.parent.kind != Array {
+		return 0
+	}
+	return n.idx
+}
+
+// SelfKey returns the key of current node if it is a member of object
+func (n *Node) SelfKey() string {
+	if n == nil || n.parent == nil || n.parent.kind != Object {
+		return ""
+	}
+	return n.parent.keys[n.idx]
+}
+
 // IsNull return true if node contains null json value
 func (n *Node) IsNull() bool {
 	return n.Exists() && n.kind == Null
