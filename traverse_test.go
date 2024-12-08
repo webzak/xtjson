@@ -6,8 +6,7 @@ import (
 
 func TestPath(t *testing.T) {
 	node, err := Parse(`[20, ["v1", {"k1": "ov1", "k2": {"kk1": "value"}}]]`)
-	assertNil(t, err)
-	assertNotNil(t, node)
+	assertParsed(t, node, err)
 	assertEqual(t, undef, node.Path(""))
 	assertEqual(t, node, node.Path("$"))
 	assertEqual(t, float64(20), node.Path("$[0]").value)
@@ -16,8 +15,7 @@ func TestPath(t *testing.T) {
 	assertEqual(t, "value", node.Path("$[1][1].k2.kk1").value)
 
 	node, err = Parse(`{"k1": ["v1", "v2", {"kk1": "vv1"}], "k2": "foo"}`)
-	assertNil(t, err)
-	assertNotNil(t, node)
+	assertParsed(t, node, err)
 	assertEqual(t, "foo", node.Path("$.k2").value)
 	assertEqual(t, Array, node.Path("$.k1").kind)
 	assertEqual(t, "v1", node.Path("$.k1[0]").value)
@@ -27,8 +25,7 @@ func TestPath(t *testing.T) {
 
 func TestSelfPath(t *testing.T) {
 	node, err := Parse(`[20, ["v1", {"k1": "ov1", "k2": {"kk1": true}}]]`)
-	assertNil(t, err)
-	assertNotNil(t, node)
+	assertParsed(t, node, err)
 	assertEqual(t, "$[1][1].k2.kk1", node.Idx(1).Idx(1).Key("k2").Key("kk1").SelfPath())
 	node = nil
 	assertEqual(t, "", node.SelfPath())
@@ -38,8 +35,7 @@ func TestSelfPath(t *testing.T) {
 
 func TestParent(t *testing.T) {
 	node, err := Parse(`[20]`)
-	assertNil(t, err)
-	assertNotNil(t, node)
+	assertParsed(t, node, err)
 	assertEqual(t, undef, node.Parent())
 	assertEqual(t, node, node.Idx(0).Parent())
 	node = nil
@@ -50,8 +46,7 @@ func TestParent(t *testing.T) {
 
 func TestChildren(t *testing.T) {
 	node, err := Parse(`[20, 21]`)
-	assertNil(t, err)
-	assertNotNil(t, node)
+	assertParsed(t, node, err)
 	assertEqual(t, 2, len(node.Children()))
 	assertEqual(t, 0, len(node.Idx(0).Children()))
 	node = nil
@@ -62,8 +57,7 @@ func TestChildren(t *testing.T) {
 
 func TestChildrenKeys(t *testing.T) {
 	node, err := Parse(`{"ka":"va", "kb":"vb", "kc":[1,2,3]}`)
-	assertNil(t, err)
-	assertNotNil(t, node)
+	assertParsed(t, node, err)
 	assertEqual(t, []string{"ka", "kb", "kc"}, node.ChildrenKeys())
 	assertEqual(t, 0, len(node.Key("kc").ChildrenKeys()))
 	node = nil
@@ -74,8 +68,7 @@ func TestChildrenKeys(t *testing.T) {
 
 func TestChildrenLength(t *testing.T) {
 	node, err := Parse(`{"ka":"va", "kb":"vb", "kc":[1,2,3]}`)
-	assertNil(t, err)
-	assertNotNil(t, node)
+	assertParsed(t, node, err)
 	assertEqual(t, 3, node.ChildrenLength())
 	assertEqual(t, 0, node.Key("kb").ChildrenLength())
 	assertEqual(t, 3, node.Key("kc").ChildrenLength())
@@ -87,8 +80,7 @@ func TestChildrenLength(t *testing.T) {
 
 func TestWalk(t *testing.T) {
 	node, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kkb3":"kkv3"}`)
-	assertNil(t, err)
-	assertNotNil(t, node)
+	assertParsed(t, node, err)
 	node = node.Walk()
 	assertEqual(t, "va", node.value)
 	node = node.Walk()

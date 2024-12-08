@@ -3,8 +3,13 @@ package xtjson
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"strings"
+)
+
+var (
+	ErrDuplicateKey = errors.New("duplicate key")
 )
 
 // ParseStream converts the bytes stream to tree and returns the top node of the tree
@@ -30,7 +35,7 @@ func ParseStream(stream io.Reader) (*Node, error) {
 		case json.Delim:
 			switch v {
 			case '{':
-				node = &Node{kind: Object}
+				node = &Node{kind: Object, keymap: make(map[string]int)}
 				setParent = true
 			case '[':
 				node = &Node{kind: Array}
@@ -62,7 +67,11 @@ func ParseStream(stream io.Reader) (*Node, error) {
 				parent.children = append(parent.children, node)
 
 				if parent.kind == Object {
-					parent.keys = append(parent.keys, key)
+					node.key = key
+					if _, ok := parent.keymap[key]; ok {
+						return nil, errors.Join(ErrDuplicateKey, errors.New("key already exists: "+key))
+					}
+					parent.keymap[key] = node.idx
 					keySet = false
 				}
 			}

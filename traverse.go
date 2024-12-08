@@ -93,16 +93,15 @@ func (n *Node) SelfPath() string {
 	ret := ""
 	node := n
 	for {
-		idx := node.idx
 		parent := node.parent
 		if parent == nil {
 			ret = "$" + ret
 			break
 		}
 		if parent.kind == Array {
-			ret = "[" + strconv.Itoa(idx) + "]" + ret
+			ret = "[" + strconv.Itoa(node.idx) + "]" + ret
 		} else if parent.kind == Object {
-			ret = "." + parent.keys[idx] + ret
+			ret = "." + node.key + ret
 		} else {
 			panic("parent is neither array nor object")
 		}
@@ -132,7 +131,11 @@ func (n *Node) ChildrenKeys() []string {
 	if n == nil || n.kind != Object {
 		return nil
 	}
-	return n.keys
+	ret := make([]string, 0, len(n.children))
+	for _, child := range n.children {
+		ret = append(ret, child.key)
+	}
+	return ret
 }
 
 // ChildrenLength returns the length of node children

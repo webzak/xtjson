@@ -33,7 +33,8 @@ type Node struct {
 	parent   *Node
 	value    any
 	idx      int
-	keys     []string
+	key      string
+	keymap   map[string]int
 	children []*Node
 }
 
@@ -52,12 +53,11 @@ func (n *Node) Key(key string) *Node {
 	if n == nil {
 		return undef
 	}
-	for i, k := range n.keys {
-		if k == key {
-			return n.children[i]
-		}
+	idx, ok := n.keymap[key]
+	if !ok {
+		return undef
 	}
-	return undef
+	return n.children[idx]
 }
 
 // RawValue returns raw node value, for Array or Object type it return nil
@@ -110,7 +110,7 @@ func (n *Node) SelfKey() string {
 	if n == nil || n.parent == nil || n.parent.kind != Object {
 		return ""
 	}
-	return n.parent.keys[n.idx]
+	return n.key
 }
 
 // IsNull return true if node contains null json value

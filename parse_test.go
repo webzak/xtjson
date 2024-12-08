@@ -4,50 +4,53 @@ import (
 	"testing"
 )
 
-func TestParsSingle(t *testing.T) {
+func TestParseSingle(t *testing.T) {
 	node, err := Parse(`"foo"`)
-	assertNil(t, err)
+	assertParsed(t, node, err)
 	assertEqual(t, String, node.kind)
 	assertEqual(t, "foo", node.value)
 
 	node, err = Parse(`true`)
-	assertNil(t, err)
+	assertParsed(t, node, err)
 	assertEqual(t, Bool, node.kind)
 	assertEqual(t, true, node.value)
 
 	node, err = Parse(`100`)
-	assertNil(t, err)
+	assertParsed(t, node, err)
 	assertEqual(t, Number, node.kind)
 	assertEqual(t, 100.0, node.value)
 
 	node, err = Parse(`100.1`)
-	assertNil(t, err)
+	assertParsed(t, node, err)
 	assertEqual(t, Number, node.kind)
 	assertEqual(t, 100.1, node.value)
 
 	node, err = Parse(`null`)
-	assertNil(t, err)
+	assertParsed(t, node, err)
 	assertEqual(t, Null, node.kind)
 	assertEqual(t, nil, node.value)
 
 	node, err = Parse(`{}`)
-	assertNil(t, err)
+	assertParsed(t, node, err)
 	assertEqual(t, Object, node.kind)
 	assertEqual(t, nil, node.value)
 
 	node, err = Parse(`[]`)
-	assertNil(t, err)
+	assertParsed(t, node, err)
 	assertEqual(t, Array, node.kind)
 	assertEqual(t, nil, node.value)
 }
 
 func TestParsePlainObject(t *testing.T) {
 	node, err := Parse(`{"key1":"value1", "key2": false, "key3":  20, "key4": null}`)
-	assertNil(t, err)
+	assertParsed(t, node, err)
 	assertEqual(t, Object, node.kind)
 	assertNil(t, node.value)
-	assertEqual(t, []string{"key1", "key2", "key3", "key4"}, node.keys)
 	assertEqual(t, 4, len(node.children))
+	assertEqual(t, 0, node.keymap["key1"])
+	assertEqual(t, 1, node.keymap["key2"])
+	assertEqual(t, 2, node.keymap["key3"])
+	assertEqual(t, 3, node.keymap["key4"])
 	c0 := node.children[0]
 	assertEqual(t, String, c0.kind)
 	assertEqual(t, "value1", c0.value)
@@ -72,10 +75,10 @@ func TestParsePlainObject(t *testing.T) {
 
 func TestParsePlainArray(t *testing.T) {
 	node, err := Parse(`["value1", false, 20, null]`)
-	assertNil(t, err)
+	assertParsed(t, node, err)
 	assertEqual(t, Array, node.kind)
 	assertNil(t, node.value)
-	assertEqual(t, 0, len(node.keys))
+	assertEqual(t, map[string]int(nil), node.keymap)
 	assertEqual(t, 4, len(node.children))
 	c0 := node.children[0]
 	assertEqual(t, String, c0.kind)
@@ -101,10 +104,10 @@ func TestParsePlainArray(t *testing.T) {
 
 func TestParseNested(t *testing.T) {
 	node, err := Parse(`[20, ["v1", "v2"], {"k1": "ov1", "k2": {"kk1": true}}]`)
-	assertNil(t, err)
+	assertParsed(t, node, err)
 	assertEqual(t, Array, node.kind)
 	assertNil(t, node.value)
-	assertEqual(t, 0, len(node.keys))
+	assertEqual(t, 0, len(node.keymap))
 	assertEqual(t, 3, len(node.children))
 	c0 := node.children[0]
 	assertEqual(t, Number, c0.kind)
