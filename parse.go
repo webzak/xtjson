@@ -9,6 +9,7 @@ import (
 )
 
 var (
+	ErrInvalidJson  = errors.New("invalid json")
 	ErrDuplicateKey = errors.New("duplicate key")
 )
 
@@ -28,7 +29,7 @@ func ParseStream(stream io.Reader) (*Node, error) {
 			break
 		}
 		if err != nil {
-			return nil, err
+			return nil, errors.Join(ErrInvalidJson, err)
 		}
 
 		switch v := token.(type) {
@@ -81,6 +82,9 @@ func ParseStream(stream io.Reader) (*Node, error) {
 			setParent = false
 		}
 	}
+	if node.parent != nil {
+		return nil, ErrInvalidJson
+	}
 	return node, nil
 }
 
@@ -90,7 +94,7 @@ func Parse(s string) (*Node, error) {
 	return ParseStream(stream)
 }
 
-// DecodeStream converts json bytes to tree and returns the top node of the tree
+// DecodeBytes converts json bytes to tree and returns the top node of the tree
 func ParseBytes(b []byte) (*Node, error) {
 	stream := bytes.NewReader(b)
 	return ParseStream(stream)

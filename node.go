@@ -3,7 +3,7 @@ package xtjson
 import "errors"
 
 var (
-	ErrValueDoesNotExist = errors.New("value does not exist")
+	ErrNodeDoesNotExist  = errors.New("node does not exist")
 	ErrValueIsNotString  = errors.New("value is not string")
 	ErrValueIsNotBool    = errors.New("value is not boolen")
 	ErrValueIsNotNumber  = errors.New("value is not number")
@@ -126,7 +126,7 @@ func (n *Node) IsString() bool {
 // String return string value or error if value is not of string type
 func (n *Node) String() (string, error) {
 	if !n.Exists() {
-		return "", ErrValueDoesNotExist
+		return "", ErrNodeDoesNotExist
 	}
 	if n.kind != String {
 		return "", ErrValueIsNotString
@@ -142,7 +142,7 @@ func (n *Node) IsBool() bool {
 // Bool boolean node value or error if value is not of bool type
 func (n *Node) Bool() (bool, error) {
 	if !n.Exists() {
-		return false, ErrValueDoesNotExist
+		return false, ErrNodeDoesNotExist
 	}
 	if n.kind != Bool {
 		return false, ErrValueIsNotBool
@@ -158,7 +158,7 @@ func (n *Node) IsNumber() bool {
 // Nuumber returns numeric node value or error if value is not numeric
 func (n *Node) Number() (float64, error) {
 	if !n.Exists() {
-		return 0, ErrValueDoesNotExist
+		return 0, ErrNodeDoesNotExist
 	}
 	if n.kind != Number {
 		return 0, ErrValueIsNotNumber
@@ -178,7 +178,7 @@ func (n *Node) IsInt() bool {
 // Nuumber returns numeric node value or error if value is not numeric
 func (n *Node) Int() (int, error) {
 	if !n.Exists() {
-		return 0, ErrValueDoesNotExist
+		return 0, ErrNodeDoesNotExist
 	}
 	if n.kind != Number {
 		return 0, ErrValueIsNotInteger

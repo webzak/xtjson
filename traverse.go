@@ -123,7 +123,9 @@ func (n *Node) Children() []*Node {
 	if n == nil {
 		return nil
 	}
-	return n.children
+	ret := make([]*Node, len(n.children))
+	copy(ret, n.children)
+	return ret
 }
 
 // ChildrenKeys returns children keys if node is object

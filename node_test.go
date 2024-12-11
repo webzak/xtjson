@@ -139,11 +139,11 @@ func TestString(t *testing.T) {
 	assertEqual(t, "abc", v)
 	node = nil
 	v, err = node.String()
-	assertEqual(t, ErrValueDoesNotExist, err)
+	assertEqual(t, ErrNodeDoesNotExist, err)
 	assertEqual(t, "", v)
 	node = undef
 	v, err = node.String()
-	assertEqual(t, ErrValueDoesNotExist, err)
+	assertEqual(t, ErrNodeDoesNotExist, err)
 	assertEqual(t, "", v)
 }
 
@@ -169,11 +169,11 @@ func TestBool(t *testing.T) {
 	assertEqual(t, true, v)
 	node = nil
 	v, err = node.Bool()
-	assertEqual(t, ErrValueDoesNotExist, err)
+	assertEqual(t, ErrNodeDoesNotExist, err)
 	assertEqual(t, false, v)
 	node = undef
 	v, err = node.Bool()
-	assertEqual(t, ErrValueDoesNotExist, err)
+	assertEqual(t, ErrNodeDoesNotExist, err)
 	assertEqual(t, false, v)
 }
 
@@ -218,11 +218,11 @@ func TestNumber(t *testing.T) {
 
 	node = nil
 	v, err = node.Number()
-	assertEqual(t, ErrValueDoesNotExist, err)
+	assertEqual(t, ErrNodeDoesNotExist, err)
 	assertEqual(t, float64(0), v)
 	node = undef
 	v, err = node.Number()
-	assertEqual(t, ErrValueDoesNotExist, err)
+	assertEqual(t, ErrNodeDoesNotExist, err)
 	assertEqual(t, float64(0), v)
 }
 
@@ -242,10 +242,10 @@ func TestInt(t *testing.T) {
 
 	node = nil
 	v, err = node.Int()
-	assertEqual(t, ErrValueDoesNotExist, err)
+	assertEqual(t, ErrNodeDoesNotExist, err)
 	assertEqual(t, 0, v)
 	node = undef
 	v, err = node.Int()
-	assertEqual(t, ErrValueDoesNotExist, err)
+	assertEqual(t, ErrNodeDoesNotExist, err)
 	assertEqual(t, 0, v)
 }

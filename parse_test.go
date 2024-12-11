@@ -1,6 +1,7 @@
 package xtjson
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -114,4 +115,27 @@ func TestParseNested(t *testing.T) {
 	assertEqual(t, float64(20), c0.value)
 	assertEqual(t, node, c0.parent)
 	assertEqual(t, 0, c0.idx)
+}
+
+func TestIncorrectJson(t *testing.T) {
+	inputs := []string{
+		`{"k1": "v1", "k2": "v2",}`,
+		`{"k1": "v1", "k2": {"kk1": "vv1"}`,
+		`{"k1": "v1", "k2": {"kk1": "vv1"}}}`,
+	}
+	for _, s := range inputs {
+		_, err := Parse(s)
+		if !errors.Is(err, ErrInvalidJson) {
+			t.Fatal("expected ErrInvalid json")
+		}
+	}
+}
+
+func TestDuplicateKey(t *testing.T) {
+
+	_, err := Parse(`{"k1": "v1", "k1": "v2"}`)
+	if !errors.Is(err, ErrDuplicateKey) {
+		t.Fatal("expected ErrDuplicateKey error")
+	}
+
 }
