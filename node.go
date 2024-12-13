@@ -14,6 +14,8 @@ var (
 	undef = &Node{kind: Undefined}
 )
 
+const maxDeep = 10000
+
 // Type contains node type
 type Type int
 
@@ -66,6 +68,23 @@ func (n *Node) RawValue() any {
 		return nil
 	}
 	return n.value
+}
+
+// Level returns the node deep level
+func (n *Node) Level() int {
+	ret := 0
+	node := n
+	for {
+		if node == nil || node.parent == nil {
+			break
+		}
+		node = node.parent
+		ret++
+		if ret > maxDeep {
+			panic("very deep node or parent loop dependecy detected")
+		}
+	}
+	return ret
 }
 
 // Exists indicate if node traversed exists in a tree

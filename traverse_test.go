@@ -78,25 +78,152 @@ func TestChildrenLength(t *testing.T) {
 	assertEqual(t, 0, node.ChildrenLength())
 }
 
-func TestWalk(t *testing.T) {
-	node, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kkb3":"kkv3"}`)
-	assertParsed(t, node, err)
-	node = node.Walk()
-	assertEqual(t, "va", node.value)
-	node = node.Walk()
-	assertEqual(t, Object, node.kind)
-	node = node.Walk()
-	assertEqual(t, "kkv1", node.value)
-	node = node.Walk()
-	assertEqual(t, Array, node.kind)
-	node = node.Walk()
-	assertEqual(t, float64(1), node.value)
-	node = node.Walk()
-	assertEqual(t, float64(2), node.value)
-	node = node.Walk()
-	assertEqual(t, "kkv3", node.value)
-	node = node.Walk()
-	assertEqual(t, undef, node)
-	node = node.Walk()
-	assertEqual(t, undef, node)
+func TestWalker(t *testing.T) {
+	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kkb3":[]}`)
+	assertParsed(t, root, err)
+	walker, err := NewWalker(root, 0)
+	assertNil(t, err)
+
+	node, state := walker.Next()
+	assertEqual(t, root, node)
+	assertEqual(t, WalkEnter, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "ka", node.key)
+	assertEqual(t, WalkPass, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kb", node.key)
+	assertEqual(t, WalkEnter, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kkb1", node.key)
+	assertEqual(t, WalkPass, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kkb2", node.key)
+	assertEqual(t, WalkEnter, state)
+
+	node, state = walker.Next()
+	assertEqual(t, 1.0, node.value)
+	assertEqual(t, WalkPass, state)
+
+	node, state = walker.Next()
+	assertEqual(t, 2.0, node.value)
+	assertEqual(t, WalkPass, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kkb2", node.key)
+	assertEqual(t, WalkExit, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kb", node.key)
+	assertEqual(t, WalkExit, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kkb3", node.key)
+	assertEqual(t, WalkEnter, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kkb3", node.key)
+	assertEqual(t, WalkExit, state)
+
+	node, state = walker.Next()
+	assertEqual(t, root, node)
+	assertEqual(t, WalkExit, state)
+
+	node, state = walker.Next()
+	assertNil(t, node)
+	assertEqual(t, WalkDone, state)
+
+	node, state = walker.Next()
+	assertNil(t, node)
+	assertEqual(t, WalkDone, state)
+}
+
+func TestWalkerWithDeepLevel(t *testing.T) {
+	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kkb3":[]}`)
+	assertParsed(t, root, err)
+	walker, err := NewWalker(root, 1)
+	assertNil(t, err)
+
+	node, state := walker.Next()
+	assertEqual(t, root, node)
+	assertEqual(t, WalkEnter, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "ka", node.key)
+	assertEqual(t, WalkPass, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kb", node.key)
+	assertEqual(t, WalkEnter, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kb", node.key)
+	assertEqual(t, WalkExit, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kkb3", node.key)
+	assertEqual(t, WalkEnter, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kkb3", node.key)
+	assertEqual(t, WalkExit, state)
+
+	node, state = walker.Next()
+	assertEqual(t, root, node)
+	assertEqual(t, WalkExit, state)
+
+	node, state = walker.Next()
+	assertNil(t, node)
+	assertEqual(t, WalkDone, state)
+
+	node, state = walker.Next()
+	assertNil(t, node)
+	assertEqual(t, WalkDone, state)
+}
+
+func TestWalkerStartDeeper(t *testing.T) {
+	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kkb3":[]}`)
+	assertParsed(t, root, err)
+	root = root.Key("kb")
+	walker, err := NewWalker(root, 2)
+	assertNil(t, err)
+
+	node, state := walker.Next()
+	assertEqual(t, root, node)
+	assertEqual(t, WalkEnter, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kkb1", node.key)
+	assertEqual(t, WalkPass, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kkb2", node.key)
+	assertEqual(t, WalkEnter, state)
+
+	node, state = walker.Next()
+	assertEqual(t, 1.0, node.value)
+	assertEqual(t, WalkPass, state)
+
+	node, state = walker.Next()
+	assertEqual(t, 2.0, node.value)
+	assertEqual(t, WalkPass, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kkb2", node.key)
+	assertEqual(t, WalkExit, state)
+
+	node, state = walker.Next()
+	assertEqual(t, root, node)
+	assertEqual(t, WalkExit, state)
+
+	node, state = walker.Next()
+	assertNil(t, node)
+	assertEqual(t, WalkDone, state)
+
+	node, state = walker.Next()
+	assertNil(t, node)
+	assertEqual(t, WalkDone, state)
 }

@@ -37,6 +37,19 @@ func TestRawValue(t *testing.T) {
 	assertEqual(t, nil, node.RawValue())
 }
 
+func TestLevel(t *testing.T) {
+	node, err := Parse(`{"ka":"va", "kb":[1,2,3,{"kc":2}]}`)
+	assertParsed(t, node, err)
+	assertEqual(t, 0, node.Level())
+	assertEqual(t, 1, node.Key("ka").Level())
+	assertEqual(t, 2, node.Key("kb").Idx(1).Level())
+	assertEqual(t, 3, node.Key("kb").Idx(3).Key("kc").Level())
+	node = nil
+	assertEqual(t, 0, node.Level())
+	node = undef
+	assertEqual(t, 0, node.Level())
+}
+
 func TestExists(t *testing.T) {
 	node, err := Parse(`{"key":"foo"}`)
 	assertParsed(t, node, err)

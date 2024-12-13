@@ -1,6 +1,9 @@
 package xtjson
 
-import "strconv"
+import (
+	"errors"
+	"strconv"
+)
 
 type state int
 
@@ -9,6 +12,92 @@ const (
 	object
 	array
 )
+
+var (
+	ErrNilRoot = errors.New("nil root node")
+)
+
+// Type contains node type
+type WalkState int
+
+const (
+	WalkPass WalkState = iota
+	WalkEnter
+	WalkExit
+	WalkDone
+)
+
+// Walker provides an api for traversing tree nodes
+type Walker struct {
+	root      *Node
+	deepLimit int
+	next      *Node
+	nextState WalkState
+}
+
+// NewWalker creates Walker instance
+// root is a start and end point
+// deepLimit 0 means unlimited
+func NewWalker(root *Node, deepLimit int) (*Walker, error) {
+	if root == nil {
+		return nil, ErrNilRoot
+	}
+	if deepLimit > 0 {
+		deepLimit += root.Level()
+	}
+	ret := Walker{
+		root:      root,
+		deepLimit: deepLimit,
+		next:      root,
+		nextState: WalkEnter,
+	}
+	if root.IsScalar() {
+		ret.nextState = WalkPass
+	}
+	return &ret, nil
+}
+
+// Next returns next node in walk
+func (w *Walker) Next() (*Node, WalkState) {
+	if w == nil || w.nextState == WalkDone {
+		return nil, WalkDone
+	}
+	node := w.next
+	state := w.nextState
+
+	if state == WalkEnter {
+		if len(node.children) == 0 || w.deepLimit > 0 && node.Level() >= w.deepLimit {
+			w.next = node
+			w.nextState = WalkExit
+			return node, state
+		}
+		w.next = node.children[0]
+		w.nextState = WalkPass
+		if w.next.IsParent() {
+			w.nextState = WalkEnter
+		}
+		return node, state
+	}
+
+	if state == WalkPass || state == WalkExit {
+		parent := node.parent
+		if parent == nil || node == w.root {
+			w.nextState = WalkDone
+			return node, state
+		}
+		if len(parent.children)-1 > node.idx {
+			w.next = parent.children[node.idx+1]
+			w.nextState = WalkPass
+			if w.next.IsParent() {
+				w.nextState = WalkEnter
+			}
+			return node, state
+		}
+		w.next = parent
+		w.nextState = WalkExit
+	}
+	return node, state
+}
 
 // Path returns the node in the tree referenced by json path
 func (n *Node) Path(path string) *Node {
@@ -146,25 +235,4 @@ func (n *Node) ChildrenLength() int {
 		return 0
 	}
 	return len(n.children)
-}
-
-// Walk goes over tree and the pass is done when it returns undefined node
-func (n *Node) Walk() *Node {
-	if n == nil {
-		return undef
-	}
-	if (n.kind == Array || n.kind == Object) && len(n.children) > 0 {
-		return n.children[0]
-	}
-	node := n
-	for {
-		parent := node.parent
-		if parent == nil {
-			return undef
-		}
-		if len(parent.children)-1 > node.idx {
-			return parent.children[node.idx+1]
-		}
-		node = parent
-	}
 }
