@@ -17,16 +17,20 @@ func assertEqual(t *testing.T, expected, actual any) {
 
 func assertNil(t *testing.T, value any) {
 	t.Helper()
-	if value != nil {
-		t.Fatalf("value: %v expected to be nil", value)
-	}
-}
-
-func assertNotNil(t *testing.T, value any) {
-	t.Helper()
 	if value == nil {
-		t.Fatalf("value: %v expected to be not nil", value)
+		return
 	}
+	iv := reflect.ValueOf(value)
+	if !iv.IsValid() {
+		return
+	}
+	switch iv.Kind() {
+	case reflect.Ptr, reflect.Slice, reflect.Map, reflect.Func, reflect.Interface:
+		if iv.IsNil() {
+			return
+		}
+	}
+	t.Fatalf("value: %v expected to be nil", value)
 }
 
 func assertParsed(t *testing.T, node any, err any) {
