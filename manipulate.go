@@ -3,6 +3,7 @@ package xtjson
 import (
 	"errors"
 	"fmt"
+	"sort"
 )
 
 var (
@@ -266,4 +267,51 @@ func (n *Node) ReplaceByInt(value int) error {
 // ReplaceByNull replaces receiver with null node
 func (n *Node) ReplaceByNull() error {
 	return n.Replace(NewNull())
+}
+
+// SortKeys sorts keys alphabetically reordering children nodes
+func (n *Node) SortKeys() error {
+	if n.kind != Object {
+		return ErrInvalidNodeForOperation
+	}
+	klen := len(n.keymap)
+	if klen == 0 {
+		return nil
+	}
+
+	keys := make([]string, 0, klen)
+	for k := range n.keymap {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	children := make([]*Node, klen)
+	for i, key := range keys {
+		idx := n.keymap[key]
+		children[i] = n.children[idx]
+		n.keymap[key] = i
+	}
+	n.children = children
+	return nil
+}
+
+// SortTreeKeys sorts keys alphabetically in current and all children nodes
+func (n *Node) SortTreeKeys() error {
+	walker, err := NewWalker(n, 0)
+	if err != nil {
+		return err
+	}
+	for {
+		node, state := walker.Next()
+		if state == WalkDone {
+			break
+		}
+		if node.kind != Object || state == WalkExit {
+			continue
+		}
+		err = node.SortKeys()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

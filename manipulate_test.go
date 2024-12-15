@@ -335,3 +335,19 @@ func TestReplaceByType(t *testing.T) {
 	assertNil(t, err)
 	assertEqual(t, `["aaa",true,33.333,10,null]`, root.Stringify())
 }
+
+func TestSortKeys(t *testing.T) {
+	root, err := Parse(`{"c":"c","a":"a","b":"b"}`)
+	assertParsed(t, root, err)
+	err = root.SortKeys()
+	assertNil(t, err)
+	assertEqual(t, `{"a":"a","b":"b","c":"c"}`, root.Stringify())
+}
+
+func TestSortTreeKeys(t *testing.T) {
+	root, err := Parse(`[1,2,3,{"c":"c","a":"a","b":"b"}]`)
+	assertParsed(t, root, err)
+	err = root.SortTreeKeys()
+	assertNil(t, err)
+	assertEqual(t, `[1,2,3,{"a":"a","b":"b","c":"c"}]`, root.Stringify())
+}
