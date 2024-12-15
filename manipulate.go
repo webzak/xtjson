@@ -288,6 +288,7 @@ func (n *Node) SortKeys() error {
 	for i, key := range keys {
 		idx := n.keymap[key]
 		children[i] = n.children[idx]
+		children[i].idx = i
 		n.keymap[key] = i
 	}
 	n.children = children
@@ -305,7 +306,7 @@ func (n *Node) SortTreeKeys() error {
 		if state == WalkDone {
 			break
 		}
-		if node.kind != Object || state == WalkExit {
+		if node.kind != Object || state == WalkEnter {
 			continue
 		}
 		err = node.SortKeys()

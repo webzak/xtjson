@@ -345,9 +345,9 @@ func TestSortKeys(t *testing.T) {
 }
 
 func TestSortTreeKeys(t *testing.T) {
-	root, err := Parse(`[1,2,3,{"c":"c","a":"a","b":"b"}]`)
+	root, err := Parse(`[1,{"c":"c","a":"a","d":"d","b":{"n":"n","f":"f"}}]`)
 	assertParsed(t, root, err)
 	err = root.SortTreeKeys()
 	assertNil(t, err)
-	assertEqual(t, `[1,2,3,{"a":"a","b":"b","c":"c"}]`, root.Stringify())
+	assertEqual(t, `[1,{"a":"a","b":{"f":"f","n":"n"},"c":"c","d":"d"}]`, root.Stringify())
 }
