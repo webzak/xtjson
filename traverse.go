@@ -236,3 +236,35 @@ func (n *Node) ChildrenLength() int {
 	}
 	return len(n.children)
 }
+
+func (n *Node) copy(parent *Node) *Node {
+	if n == nil {
+		return undef
+	}
+	node := &Node{
+		kind:   n.kind,
+		parent: parent,
+		value:  n.value,
+		idx:    n.idx,
+		key:    n.key,
+	}
+	if node.kind == Array || node.kind == Object {
+		node.children = make([]*Node, len(n.children))
+		for i, c := range n.children {
+			node.children[i] = c.copy(node)
+		}
+	}
+	if node.kind == Object {
+		keymap := make(map[string]int)
+		for key, idx := range n.keymap {
+			keymap[key] = idx
+		}
+		node.keymap = keymap
+	}
+	return node
+}
+
+// Copy creates a tree copy starting from receiver which becomes the root
+func (n *Node) Copy() *Node {
+	return n.copy(nil)
+}

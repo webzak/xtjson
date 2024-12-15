@@ -194,7 +194,7 @@ func (n *Node) IsInt() bool {
 	return v == float64(int(v))
 }
 
-// Nuumber returns numeric node value or error if value is not numeric
+// Int returns numeric node value if the one can be converted to integert without loss
 func (n *Node) Int() (int, error) {
 	if !n.Exists() {
 		return 0, ErrNodeDoesNotExist

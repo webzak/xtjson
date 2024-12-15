@@ -227,3 +227,24 @@ func TestWalkerStartDeeper(t *testing.T) {
 	assertNil(t, node)
 	assertEqual(t, WalkDone, state)
 }
+
+func TestCopy(t *testing.T) {
+	root, err := Parse(`{"ka":"va","kb":{"kkb1":"kkv1","kkb2":[1,2]},"kkb3":[]}`)
+	assertParsed(t, root, err)
+	sub := root.Key("kb").Copy()
+	assertNil(t, sub.parent)
+	if root == sub {
+		t.Fatal("copied value is not duplicated")
+	}
+	assertEqual(t, `{"kkb1":"kkv1","kkb2":[1,2]}`, sub.Stringify())
+	if root.Key("kb").Key("kkb1") == sub.Key("kkb1") {
+		t.Fatal("copied child is not duplicated")
+	}
+
+	root = NewString("foo")
+	c := root.Copy()
+	assertEqual(t, root.value, c.value)
+	if root == c {
+		t.Fatal("copied value is not duplicated")
+	}
+}
