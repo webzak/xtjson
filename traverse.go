@@ -14,7 +14,8 @@ const (
 )
 
 var (
-	ErrNilRoot = errors.New("nil root node")
+	ErrNilNode  = errors.New("nil node")
+	ErrWalkSkip = errors.New("skip can be done only right after WalkEnter state")
 )
 
 // Type contains node type
@@ -40,10 +41,12 @@ type Walker struct {
 // deepLimit 0 means unlimited
 func NewWalker(root *Node, deepLimit int) (*Walker, error) {
 	if root == nil {
-		return nil, ErrNilRoot
+		return nil, ErrNilNode
 	}
 	if deepLimit > 0 {
 		deepLimit += root.Level()
+	} else {
+		deepLimit = 0
 	}
 	ret := Walker{
 		root:      root,
@@ -97,6 +100,36 @@ func (w *Walker) Next() (*Node, WalkState) {
 		w.nextState = WalkExit
 	}
 	return node, state
+}
+
+// Skip method can be called to bypass going deep to current node children
+// This method will have effect if called right after Walker returned WalkEnter state,
+// otherwise it returns the error. Even after error the walker is able to continue.
+func (w *Walker) Skip() error {
+	if w.next == nil || w.next.idx != 0 || w.nextState == WalkExit || w.nextState == WalkDone {
+		return ErrWalkSkip
+	}
+	parent := w.next.upper()
+	if parent == nil {
+		w.next = nil
+		w.nextState = WalkDone
+		return nil
+	}
+	w.next = parent
+	w.nextState = WalkExit
+	return nil
+}
+
+// the method to retrieve parent with the verification that parent is correct node
+// it should not be the case when parent is scalar, so method panics if this suddenly happened
+func (n *Node) upper() *Node {
+	if n == nil || n.parent == nil {
+		return nil
+	}
+	if n.parent.kind != Object && n.parent.kind != Array {
+		panic("node parent is scalar!")
+	}
+	return n.parent
 }
 
 // Path returns the node in the tree referenced by json path
@@ -207,6 +240,23 @@ func (n *Node) Parent() *Node {
 	return n.parent
 }
 
+// IsAncestorOf check if receiver is ancestor of node
+func (n *Node) IsAncestorOf(node *Node) bool {
+	if n == nil || node == nil {
+		return false
+	}
+	for {
+		if node.parent == nil {
+			break
+		}
+		if node.parent == n {
+			return true
+		}
+		node = node.parent
+	}
+	return false
+}
+
 // Children returns node children
 func (n *Node) Children() []*Node {
 	if n == nil {
@@ -239,7 +289,7 @@ func (n *Node) ChildrenLength() int {
 
 func (n *Node) copy(parent *Node) *Node {
 	if n == nil {
-		return undef
+		return nil
 	}
 	node := &Node{
 		kind:   n.kind,
@@ -266,5 +316,9 @@ func (n *Node) copy(parent *Node) *Node {
 
 // Copy creates a tree copy starting from receiver which becomes the root
 func (n *Node) Copy() *Node {
-	return n.copy(nil)
+	node := n.copy(nil)
+	if node == nil {
+		return undef
+	}
+	return node
 }

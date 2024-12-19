@@ -44,6 +44,17 @@ func TestParent(t *testing.T) {
 	assertEqual(t, undef, node.Parent())
 }
 
+func TestIsAncestorOf(t *testing.T) {
+	root, err := Parse(`{"ka":"va", "kb":"vb", "kc":[1,2,{"x":"x"}]}`)
+	assertParsed(t, root, err)
+	kb := root.Key("kb")
+	kc := root.Key("kc")
+	x := kc.Idx(2).Key("x")
+	assertEqual(t, true, kc.IsAncestorOf(x))
+	assertEqual(t, false, kb.IsAncestorOf(x))
+	assertEqual(t, true, root.IsAncestorOf(x))
+}
+
 func TestChildren(t *testing.T) {
 	node, err := Parse(`[20, 21]`)
 	assertParsed(t, node, err)
@@ -139,6 +150,36 @@ func TestWalker(t *testing.T) {
 	node, state = walker.Next()
 	assertNil(t, node)
 	assertEqual(t, WalkDone, state)
+}
+
+func TestWalkerSkip(t *testing.T) {
+	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kc":123}`)
+	assertParsed(t, root, err)
+	walker, err := NewWalker(root, 0)
+	assertNil(t, err)
+
+	node, state := walker.Next()
+	assertEqual(t, root, node)
+	assertEqual(t, WalkEnter, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "ka", node.key)
+	assertEqual(t, WalkPass, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kb", node.key)
+	assertEqual(t, WalkEnter, state)
+
+	err = walker.Skip()
+	assertNil(t, err)
+
+	node, state = walker.Next()
+	assertEqual(t, "kb", node.key)
+	assertEqual(t, WalkExit, state)
+
+	node, state = walker.Next()
+	assertEqual(t, "kc", node.key)
+	assertEqual(t, WalkPass, state)
 }
 
 func TestWalkerWithDeepLevel(t *testing.T) {

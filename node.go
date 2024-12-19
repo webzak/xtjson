@@ -108,6 +108,16 @@ func (n *Node) IsScalar() bool {
 	return !(n.kind == Array || n.kind == Object)
 }
 
+// IsArray returns true when node type is Array
+func (n *Node) IsArray() bool {
+	return n != nil && n.kind == Array
+}
+
+// IsObject returns true when node type is Object
+func (n *Node) IsObject() bool {
+	return n != nil && n.kind == Object
+}
+
 // Type returns node type
 func (n *Node) Type() Type {
 	if n == nil {
