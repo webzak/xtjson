@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -94,8 +95,18 @@ func Parse(s string) (*Node, error) {
 	return ParseStream(stream)
 }
 
-// DecodeBytes converts json bytes to tree and returns the top node of the tree
+// ParseBytes converts json bytes to tree and returns the top node of the tree
 func ParseBytes(b []byte) (*Node, error) {
 	stream := bytes.NewReader(b)
 	return ParseStream(stream)
+}
+
+// ParseFile converts json file contents to tree and returns the top node of the tree
+func ParseFile(name string) (*Node, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return ParseStream(f)
 }

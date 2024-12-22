@@ -215,13 +215,17 @@ func parseQuery(path string) ([]string, error) {
 	if len(step) > 0 {
 		steps = append(steps, step)
 	}
-	for i := range steps {
-		step := steps[i]
-		if len(steps) == 0 || step[0] != '$' {
-			steps[i] = "$" + step
+	ret := []string{}
+	for _, step := range steps {
+		if step == "$" || step == "" {
+			continue
 		}
+		if step[0] != '$' {
+			step = "$" + step
+		}
+		ret = append(ret, step)
 	}
-	return steps, nil
+	return ret, nil
 }
 
 // Query extracts nodes using the combination of Path syntax with extensions

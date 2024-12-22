@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	ErrBadQuery = errors.New("bad query format")
+	ErrBadQuery = errors.New("bad query syntax")
 )
 
 // Nodes represents list of nodes
@@ -42,8 +42,8 @@ func (ns Nodes) Path(path string) Nodes {
 	return ret
 }
 
-// StringifyValues returns json representation of values combined with top level array
-func (ns Nodes) StringifyValues(opts ...*Format) string {
+// ToArray returns json representation of values combined with top level array
+func (ns Nodes) ToArray(opts ...*Format) *Node {
 	root := &Node{
 		kind:     Array,
 		children: make([]*Node, len(ns)),
@@ -57,5 +57,5 @@ func (ns Nodes) StringifyValues(opts ...*Format) string {
 		nc.key = ""
 		root.children[i] = nc
 	}
-	return root.Stringify(opts...)
+	return root
 }
