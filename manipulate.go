@@ -16,50 +16,49 @@ var (
 
 // NewArray creates new array node
 func NewArray() *Node {
-	return &Node{kind: Array}
+	return &Node{value: Array}
 }
 
 // NewObject creates new object node
 func NewObject() *Node {
-	return &Node{kind: Object, keymap: make(map[string]int)}
+	return &Node{value: make(keymap)}
 }
 
 // NewString creates new string node
 func NewString(value string) *Node {
-	return &Node{kind: String, value: value}
+	return &Node{value: value}
 }
 
 // NewBool creates new bool mode
 func NewBool(value bool) *Node {
-	return &Node{kind: Bool, value: value}
+	return &Node{value: value}
 }
 
 // NewNull creates new null node
 func NewNull() *Node {
-	return &Node{kind: Null}
+	return &Node{value: Null}
 }
 
 // NewNumber creates new number node
 func NewNumber(value float64) *Node {
-	return &Node{kind: Number, value: value}
+	return &Node{value: value}
 }
 
 // NewInt creates new number mode, it internally converts it to default json float64 type
 func NewInt(value int) *Node {
-	return &Node{kind: Number, value: float64(value)}
+	return &Node{value: float64(value)}
 }
 
 // Append adds node to receiver children, error returned when receiver is not array node
 func (n *Node) Append(node *Node) error {
-	if n.kind != Array {
+	if !n.IsArray() {
 		return fmt.Errorf("%w %s", ErrInvalidNodeForOperation, "append")
 	}
 	if node.parent != nil {
 		return fmt.Errorf("%w %s", ErrNodeHasParent, "attemt to append node linked to another parent")
 	}
+	node.idx = n.append(node)
 	node.parent = n
-	node.idx = len(n.children)
-	n.children = append(n.children, node)
 	return nil
 }
 
@@ -95,25 +94,26 @@ func (n *Node) AppendNull() error {
 
 // Set sets node associated with key as a receiver property, error is returned if receiver is nots object
 func (n *Node) Set(key string, node *Node) error {
-	if n.kind != Object {
+	if !n.IsObject() {
 		return fmt.Errorf("%w %s", ErrInvalidNodeForOperation, "set")
 	}
 	if node.parent != nil {
 		return fmt.Errorf("%w %s", ErrNodeHasParent, "attemt to set property node linked to another parent")
 	}
-	node.key = key
+
+	var err error
 	node.parent = n
-	idx, ok := n.keymap[key]
-	if ok {
-		node.idx = idx
-		if err := n.replaceIdx(idx, node); err != nil {
-			panic(err)
-		}
-		return nil
+	node.key = key
+	kmap := n.value.(keymap)
+	idx, ok := kmap[key]
+	if !ok {
+		node.idx, err = n.appendKey(key, node)
+		return err
 	}
-	node.idx = len(n.children)
-	n.children = append(n.children, node)
-	n.keymap[key] = node.idx
+	node.idx = idx
+	if err = n.replaceIdx(idx, node); err != nil {
+		panic(err)
+	}
 	return nil
 }
 
@@ -149,7 +149,7 @@ func (n *Node) SetNull(key string) error {
 
 // RemoveIdx removes the child from array node
 func (n *Node) RemoveIdx(idx int) error {
-	if n.kind != Array {
+	if !n.IsArray() {
 		return fmt.Errorf("%w %s", ErrInvalidNodeForOperation, "remove index")
 	}
 	lc := len(n.children) - 1
@@ -167,10 +167,11 @@ func (n *Node) RemoveIdx(idx int) error {
 
 // RemoveKey removes the child from object node
 func (n *Node) RemoveKey(key string) error {
-	if n.kind != Object {
+	if !n.IsObject() {
 		return fmt.Errorf("%w %s", ErrInvalidNodeForOperation, "remove key")
 	}
-	idx, ok := n.keymap[key]
+	kmap := n.value.(keymap)
+	idx, ok := kmap[key]
 	if !ok {
 		return fmt.Errorf("%w %s", ErrInvalidKey, key)
 	}
@@ -184,10 +185,10 @@ func (n *Node) RemoveKey(key string) error {
 		n.children[i] = n.children[i+1]
 	}
 	n.children = n.children[:lc]
-	delete(n.keymap, key)
-	for key, i := range n.keymap {
+	delete(kmap, key)
+	for key, i := range kmap {
 		if i > idx {
-			n.keymap[key] = i - 1
+			kmap[key] = i - 1
 		}
 	}
 	return nil
@@ -203,7 +204,7 @@ func (n *Node) Remove() error {
 		panic("parent is scalar")
 	}
 	n.parent = nil
-	if parent.kind == Array {
+	if parent.IsArray() {
 		return parent.RemoveIdx(n.idx)
 	}
 	return parent.RemoveKey(n.key)
@@ -221,7 +222,7 @@ func (n *Node) replaceIdx(idx int, node *Node) error {
 
 // ReplaceIdx replaces the child of array node
 func (n *Node) ReplaceIdx(idx int, node *Node) error {
-	if n.kind != Array {
+	if !n.IsArray() {
 		return fmt.Errorf("%w %s", ErrInvalidNodeForOperation, "replace index")
 	}
 	node.parent = n
@@ -238,7 +239,7 @@ func (n *Node) Replace(node *Node) error {
 		panic("parent is scalar")
 	}
 	n.parent = nil
-	if parent.kind == Array {
+	if parent.IsArray() {
 		return parent.ReplaceIdx(n.idx, node)
 	}
 	return parent.Set(n.key, node)
@@ -271,25 +272,26 @@ func (n *Node) ReplaceByNull() error {
 
 // SortKeys sorts keys alphabetically reordering children nodes
 func (n *Node) SortKeys() error {
-	if n.kind != Object {
+	if !n.IsObject() {
 		return ErrInvalidNodeForOperation
 	}
-	klen := len(n.keymap)
+	kmap := n.value.(keymap)
+	klen := len(kmap)
 	if klen == 0 {
 		return nil
 	}
 
 	keys := make([]string, 0, klen)
-	for k := range n.keymap {
+	for k := range kmap {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 	children := make([]*Node, klen)
 	for i, key := range keys {
-		idx := n.keymap[key]
+		idx := kmap[key]
 		children[i] = n.children[idx]
 		children[i].idx = i
-		n.keymap[key] = i
+		kmap[key] = i
 	}
 	n.children = children
 	return nil
@@ -306,7 +308,7 @@ func (n *Node) SortTreeKeys() error {
 		if state == WalkDone {
 			break
 		}
-		if node.kind != Object || state == WalkEnter {
+		if !node.IsObject() || state == WalkEnter {
 			continue
 		}
 		err = node.SortKeys()

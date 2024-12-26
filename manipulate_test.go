@@ -7,42 +7,42 @@ import (
 
 func TestNewArray(t *testing.T) {
 	node := NewArray()
-	assertEqual(t, Array, node.kind)
+	assertEqual(t, Array, node.Type())
 }
 
 func TestNewObject(t *testing.T) {
 	node := NewObject()
-	assertEqual(t, Object, node.kind)
+	assertEqual(t, Object, node.Type())
 }
 
 func TestNewString(t *testing.T) {
 	node := NewString("foo")
-	assertEqual(t, String, node.kind)
+	assertEqual(t, String, node.Type())
 	assertEqual(t, "foo", node.value)
 }
 
 func TestNewBool(t *testing.T) {
 	node := NewBool(true)
-	assertEqual(t, Bool, node.kind)
+	assertEqual(t, Bool, node.Type())
 	assertEqual(t, true, node.value)
 }
 
 func TestNewNull(t *testing.T) {
 	node := NewNull()
-	assertEqual(t, Null, node.kind)
+	assertEqual(t, Null, node.Type())
 }
 
 func TestNewNumber(t *testing.T) {
 	value := 1.2
 	node := NewNumber(value)
-	assertEqual(t, Number, node.kind)
+	assertEqual(t, Number, node.Type())
 	assertEqual(t, value, node.value)
 }
 
 func TestNewInt(t *testing.T) {
 	value := 1
 	node := NewInt(value)
-	assertEqual(t, Number, node.kind)
+	assertEqual(t, Number, node.Type())
 	assertEqual(t, float64(value), node.value)
 }
 
@@ -117,7 +117,7 @@ func TestSet(t *testing.T) {
 	assertEqual(t, 1, node.idx)
 	assertEqual(t, root, node.parent)
 	assertEqual(t, node, root.children[1])
-	assertEqual(t, 1, root.keymap["k"])
+	assertEqual(t, 1, root.value.(keymap)["k"])
 	assertEqual(t, `{"a":1,"k":"foo"}`, root.Stringify())
 
 	node2 := NewString("aa")
@@ -126,7 +126,7 @@ func TestSet(t *testing.T) {
 	assertEqual(t, 1, node2.idx)
 	assertEqual(t, root, node2.parent)
 	assertEqual(t, node2, root.children[1])
-	assertEqual(t, 1, root.keymap["k"])
+	assertEqual(t, 1, root.value.(keymap)["k"])
 	assertEqual(t, `{"a":1,"k":"aa"}`, root.Stringify())
 
 	err = root.Set("kk", node)

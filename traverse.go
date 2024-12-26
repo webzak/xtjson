@@ -120,18 +120,6 @@ func (w *Walker) Skip() error {
 	return nil
 }
 
-// the method to retrieve parent with the verification that parent is correct node
-// it should not be the case when parent is scalar, so method panics if this suddenly happened
-func (n *Node) upper() *Node {
-	if n == nil || n.parent == nil {
-		return nil
-	}
-	if n.parent.kind != Object && n.parent.kind != Array {
-		panic("node parent is scalar!")
-	}
-	return n.parent
-}
-
 // Path returns the node in the tree referenced by json path
 func (n *Node) Path(path string) *Node {
 	if n == nil || path == "" {
@@ -220,9 +208,9 @@ func (n *Node) SelfPath() string {
 			ret = "$" + ret
 			break
 		}
-		if parent.kind == Array {
+		if parent.IsArray() {
 			ret = "[" + strconv.Itoa(node.idx) + "]" + ret
-		} else if parent.kind == Object {
+		} else if parent.IsObject() {
 			ret = "." + node.key + ret
 		} else {
 			panic("parent is neither array nor object")
@@ -269,7 +257,7 @@ func (n *Node) Children() []*Node {
 
 // ChildrenKeys returns children keys if node is object
 func (n *Node) ChildrenKeys() []string {
-	if n == nil || n.kind != Object {
+	if !n.IsObject() {
 		return nil
 	}
 	ret := make([]string, 0, len(n.children))
@@ -281,7 +269,7 @@ func (n *Node) ChildrenKeys() []string {
 
 // ChildrenLength returns the length of node children
 func (n *Node) ChildrenLength() int {
-	if n == nil || n.kind != Object && n.kind != Array {
+	if !n.IsParent() {
 		return 0
 	}
 	return len(n.children)
@@ -292,24 +280,23 @@ func (n *Node) copy(parent *Node) *Node {
 		return nil
 	}
 	node := &Node{
-		kind:   n.kind,
 		parent: parent,
 		value:  n.value,
 		idx:    n.idx,
 		key:    n.key,
 	}
-	if node.kind == Array || node.kind == Object {
+	if node.IsParent() {
 		node.children = make([]*Node, len(n.children))
 		for i, c := range n.children {
 			node.children[i] = c.copy(node)
 		}
 	}
-	if node.kind == Object {
-		keymap := make(map[string]int)
-		for key, idx := range n.keymap {
-			keymap[key] = idx
+	if node.IsObject() {
+		kmap := make(keymap)
+		for key, idx := range n.value.(keymap) {
+			kmap[key] = idx
 		}
-		node.keymap = keymap
+		node.value = kmap
 	}
 	return node
 }

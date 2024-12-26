@@ -27,16 +27,6 @@ func TestKey(t *testing.T) {
 	assertEqual(t, undef, node.Key("foo"))
 }
 
-func TestRawValue(t *testing.T) {
-	node, err := Parse(`"foo"`)
-	assertParsed(t, node, err)
-	assertEqual(t, "foo", node.RawValue())
-	node = nil
-	assertEqual(t, nil, node.RawValue())
-	node = undef
-	assertEqual(t, nil, node.RawValue())
-}
-
 func TestLevel(t *testing.T) {
 	node, err := Parse(`{"ka":"va", "kb":[1,2,3,{"kc":2}]}`)
 	assertParsed(t, node, err)
@@ -243,7 +233,7 @@ func TestInt(t *testing.T) {
 	node, err := Parse(`[12.4, 12]`)
 	assertParsed(t, node, err)
 	v, err := node.Int()
-	assertEqual(t, ErrValueIsNotInteger, err)
+	assertEqual(t, ErrValueIsNotNumber, err)
 	assertEqual(t, 0, v)
 	v, err = node.Idx(0).Int()
 	assertEqual(t, ErrValueIsNotInteger, err)

@@ -50,11 +50,11 @@ func (n *Node) Stringify(opts ...*Format) string {
 }
 
 func stringifyScalar(n *Node) string {
-	if n == nil || n.kind == Undefined {
+	if n == nil || n == undef {
 		return ""
 	}
 	var ret string
-	switch n.kind {
+	switch n.Type() {
 	case Null:
 		ret = "null"
 	case String:
@@ -85,12 +85,12 @@ func stringifyScalar(n *Node) string {
 }
 
 func stringifyContainer(n *Node, s *stringifyState) string {
-	if n == nil || n.kind == Undefined {
+	if n == nil || n == undef {
 		return ""
 	}
 	openBracket := "{"
 	closeBracket := "}"
-	if n.kind == Array {
+	if n.IsArray() {
 		openBracket = "["
 		closeBracket = "]"
 	}
@@ -99,10 +99,10 @@ func stringifyContainer(n *Node, s *stringifyState) string {
 	last := len(n.children) - 1
 	for idx, node := range n.children {
 		ret += s.indent
-		if n.kind == Object {
+		if n.IsObject() {
 			ret += strconv.Quote(node.key) + ":" + s.afterColon
 		}
-		switch node.kind {
+		switch node.Type() {
 		case Null, String, Bool, Number:
 			ret += stringifyScalar(node)
 		case Array, Object:

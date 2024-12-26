@@ -43,6 +43,50 @@ func assertParsed(t *testing.T, node any, err any) {
 	}
 }
 
+func assertString(t *testing.T, expected string, node *Node) {
+	t.Helper()
+	value, err := node.String()
+	if err != nil {
+		t.Fatalf("error %v expected to be nil", err)
+	}
+	if expected != value {
+		t.Fatalf("value expected: %v, actual: %v", expected, value)
+	}
+}
+
+func assertBool(t *testing.T, expected bool, node *Node) {
+	t.Helper()
+	value, err := node.Bool()
+	if err != nil {
+		t.Fatalf("error %v expected to be nil", err)
+	}
+	if expected != value {
+		t.Fatalf("value expected: %v, actual: %v", expected, value)
+	}
+}
+
+func assertNumber(t *testing.T, expected float64, node *Node) {
+	t.Helper()
+	value, err := node.Number()
+	if err != nil {
+		t.Fatalf("error %v expected to be nil", err)
+	}
+	if expected != value {
+		t.Fatalf("value expected: %v, actual: %v", expected, value)
+	}
+}
+
+func assertInt(t *testing.T, expected int, node *Node) {
+	t.Helper()
+	value, err := node.Int()
+	if err != nil {
+		t.Fatalf("error %v expected to be nil", err)
+	}
+	if expected != value {
+		t.Fatalf("value expected: %v, actual: %v", expected, value)
+	}
+}
+
 func format(jsonString string, indent int) (string, error) {
 	if indent < 0 {
 		return "", errors.New("negative indent")

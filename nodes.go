@@ -45,7 +45,7 @@ func (ns Nodes) Path(path string) Nodes {
 // ToArray returns json representation of values combined with top level array
 func (ns Nodes) ToArray(opts ...*Format) *Node {
 	root := &Node{
-		kind:     Array,
+		value:    Array,
 		children: make([]*Node, len(ns)),
 	}
 	for i, node := range ns {

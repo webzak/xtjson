@@ -37,10 +37,10 @@ func ParseStream(stream io.Reader) (*Node, error) {
 		case json.Delim:
 			switch v {
 			case '{':
-				node = &Node{kind: Object, keymap: make(map[string]int)}
+				node = &Node{value: make(keymap)}
 				setParent = true
 			case '[':
-				node = &Node{kind: Array}
+				node = &Node{value: Array}
 				setParent = true
 			case '}', ']':
 				if parent != nil {
@@ -48,34 +48,31 @@ func ParseStream(stream io.Reader) (*Node, error) {
 				}
 			}
 		case string:
-			if parent != nil && parent.kind == Object && !keySet {
+			if parent != nil && parent.IsObject() && !keySet {
 				key = v
 				keySet = true
 				continue
 			}
-			node = &Node{kind: String, value: v}
-		case bool:
-			node = &Node{kind: Bool, value: v}
-		case float64:
-			node = &Node{kind: Number, value: v}
+			node = &Node{value: v}
+		case bool, float64:
+			node = &Node{value: v}
 		case nil:
-			node = &Node{kind: Null, value: v}
+			node = &Node{value: Null}
 		}
 
 		if node.parent == nil {
 			node.parent = parent
-			if parent != nil {
-				node.idx = len(parent.children)
-				parent.children = append(parent.children, node)
-
-				if parent.kind == Object {
-					node.key = key
-					if _, ok := parent.keymap[key]; ok {
-						return nil, errors.Join(ErrDuplicateKey, errors.New("key already exists: "+key))
-					}
-					parent.keymap[key] = node.idx
-					keySet = false
+			if parent.IsObject() {
+				node.key = key
+				node.idx, err = parent.appendKey(key, node)
+				if err != nil {
+					return nil, err
 				}
+				keySet = false
+			} else if parent.IsArray() {
+				node.idx = parent.append(node)
+			} else if parent != nil {
+				return nil, ErrInvalidJson
 			}
 		}
 		if setParent {

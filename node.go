@@ -11,7 +11,7 @@ var (
 )
 
 var (
-	undef = &Node{kind: Undefined}
+	undef = &Node{}
 )
 
 const maxDeep = 10000
@@ -31,19 +31,121 @@ const (
 
 // Node structure represents the element of parsed json tree
 type Node struct {
-	kind     Type
 	parent   *Node
-	value    any
 	idx      int
 	key      string
-	keymap   map[string]int
+	value    any
 	children []*Node
+}
+
+type keymap map[string]int
+
+func (n *Node) Type() Type {
+	if n == nil || n == undef {
+		return Undefined
+	}
+	switch v := n.value.(type) {
+	case Type:
+		return v
+	case keymap:
+		return Object
+	case string:
+		return String
+	case bool:
+		return Bool
+	case float64:
+		return Number
+	default:
+		panic("node value type is not supported")
+	}
+}
+
+func (n *Node) IsArray() bool {
+	if n == nil {
+		return false
+	}
+	v, ok := n.value.(Type)
+	return ok && v == Array
+}
+
+func (n *Node) IsObject() bool {
+	if n == nil {
+		return false
+	}
+	switch n.value.(type) {
+	case keymap:
+		return true
+	default:
+		return false
+	}
+}
+
+func (n *Node) IsParent() bool {
+	if n == nil {
+		return false
+	}
+	switch v := n.value.(type) {
+	case keymap:
+		return true
+	case Type:
+		return v == Array
+	}
+	return false
+}
+
+func (n *Node) IsScalar() bool {
+	if n == nil {
+		return false
+	}
+	switch v := n.value.(type) {
+	case string, bool, float64:
+		return true
+	case Type:
+		return v == Null
+	}
+	return false
+}
+
+func (n *Node) upper() *Node {
+	if n == nil || n.parent == nil {
+		return nil
+	}
+	pt := n.parent.Type()
+	if pt != Object && pt != Array {
+		panic("node parent is scalar!")
+	}
+	return n.parent
+}
+
+func (n *Node) append(node *Node) int {
+	if !n.IsArray() {
+		panic("attempt to append to wrong node")
+	}
+	n.children = append(n.children, node)
+	return len(n.children) - 1
+}
+
+func (n *Node) appendKey(key string, node *Node) (int, error) {
+	if !n.IsObject() {
+		panic("attempt to append key to wrong node")
+	}
+	n.children = append(n.children, node)
+	idx := len(n.children) - 1
+	keymap := n.value.(keymap)
+	if _, ok := keymap[key]; ok {
+		return 0, errors.Join(ErrDuplicateKey, errors.New("key already exists: "+key))
+	}
+	keymap[key] = idx
+	return idx, nil
 }
 
 // Idx returns the child by index or node of type Undefined
 // it is safe method for chain access
 func (n *Node) Idx(index int) *Node {
-	if n == nil || n.kind != Array || index < 0 || index >= len(n.children) {
+	if n == nil || !n.IsArray() || index < 0 || index >= len(n.children) {
+		return undef
+	}
+	if index < 0 || index > len(n.children) {
 		return undef
 	}
 	return n.children[index]
@@ -52,22 +154,17 @@ func (n *Node) Idx(index int) *Node {
 // Key returns the child by index or nil
 // it is safe method for chain access
 func (n *Node) Key(key string) *Node {
-	if n == nil {
+	if n == nil || !n.IsObject() {
 		return undef
 	}
-	idx, ok := n.keymap[key]
+	idx, ok := n.value.(keymap)[key]
 	if !ok {
 		return undef
 	}
-	return n.children[idx]
-}
-
-// RawValue returns raw node value, for Array or Object type it return nil
-func (n *Node) RawValue() any {
-	if n == nil {
-		return nil
+	if idx < 0 || idx > len(n.children) {
+		return undef
 	}
-	return n.value
+	return n.children[idx]
 }
 
 // Level returns the node deep level
@@ -89,46 +186,12 @@ func (n *Node) Level() int {
 
 // Exists indicate if node traversed exists in a tree
 func (n *Node) Exists() bool {
-	return n != nil && n.kind != Undefined
-}
-
-// IsParent returns true if node is Array or Object
-func (n *Node) IsParent() bool {
-	if n == nil {
-		return false
-	}
-	return n.kind == Array || n.kind == Object
-}
-
-// IsScalar returns true when node type is not Array or Object or Undefined
-func (n *Node) IsScalar() bool {
-	if !n.Exists() {
-		return false
-	}
-	return !(n.kind == Array || n.kind == Object)
-}
-
-// IsArray returns true when node type is Array
-func (n *Node) IsArray() bool {
-	return n != nil && n.kind == Array
-}
-
-// IsObject returns true when node type is Object
-func (n *Node) IsObject() bool {
-	return n != nil && n.kind == Object
-}
-
-// Type returns node type
-func (n *Node) Type() Type {
-	if n == nil {
-		return Undefined
-	}
-	return n.kind
+	return n != nil && n != undef
 }
 
 // SelfIdx returns the index of current node if it is a member of array
 func (n *Node) SelfIdx() int {
-	if n == nil || n.parent == nil || n.parent.kind != Array {
+	if n == nil || n.parent == nil || !n.parent.IsArray() {
 		return 0
 	}
 	return n.idx
@@ -136,7 +199,7 @@ func (n *Node) SelfIdx() int {
 
 // SelfKey returns the key of current node if it is a member of object
 func (n *Node) SelfKey() string {
-	if n == nil || n.parent == nil || n.parent.kind != Object {
+	if n == nil || n.parent == nil || !n.parent.IsObject() {
 		return ""
 	}
 	return n.key
@@ -144,78 +207,100 @@ func (n *Node) SelfKey() string {
 
 // IsNull return true if node contains null json value
 func (n *Node) IsNull() bool {
-	return n.Exists() && n.kind == Null
+	if n == nil {
+		return false
+	}
+	v, ok := n.value.(Type)
+	return ok && v == Null
 }
 
 // IsString return true if node contains string value
 func (n *Node) IsString() bool {
-	return n.Exists() && n.kind == String
+	if n == nil {
+		return false
+	}
+	_, ok := n.value.(string)
+	return ok
 }
 
 // String return string value or error if value is not of string type
 func (n *Node) String() (string, error) {
-	if !n.Exists() {
+	if n == nil || n == undef {
 		return "", ErrNodeDoesNotExist
 	}
-	if n.kind != String {
+	v, ok := n.value.(string)
+	if !ok {
 		return "", ErrValueIsNotString
 	}
-	return n.value.(string), nil
+	return v, nil
 }
 
 // IsBool return true if node contains boolean value
 func (n *Node) IsBool() bool {
-	return n.Exists() && n.kind == Bool
+	if n == nil {
+		return false
+	}
+	_, ok := n.value.(bool)
+	return ok
 }
 
 // Bool boolean node value or error if value is not of bool type
 func (n *Node) Bool() (bool, error) {
-	if !n.Exists() {
+	if n == nil || n == undef {
 		return false, ErrNodeDoesNotExist
 	}
-	if n.kind != Bool {
+	v, ok := n.value.(bool)
+	if !ok {
 		return false, ErrValueIsNotBool
 	}
-	return n.value.(bool), nil
+	return v, nil
 }
 
 // IsNumber return true if node contains numeric value
 func (n *Node) IsNumber() bool {
-	return n.Exists() && n.kind == Number
+	if n == nil {
+		return false
+	}
+	_, ok := n.value.(float64)
+	return ok
 }
 
 // Nuumber returns numeric node value or error if value is not numeric
 func (n *Node) Number() (float64, error) {
-	if !n.Exists() {
+	if n == nil || n == undef {
 		return 0, ErrNodeDoesNotExist
 	}
-	if n.kind != Number {
+	v, ok := n.value.(float64)
+	if !ok {
 		return 0, ErrValueIsNotNumber
 	}
-	return n.value.(float64), nil
+	return v, nil
 }
 
 // IsInt return true if node contains numeric value, that can be converted to integer without loss
 func (n *Node) IsInt() bool {
-	if !n.Exists() || n.kind != Number {
+	if n == nil {
 		return false
 	}
-	v := n.value.(float64)
+	v, ok := n.value.(float64)
+	if !ok {
+		return false
+	}
 	return v == float64(int(v))
 }
 
 // Int returns numeric node value if the one can be converted to integert without loss
 func (n *Node) Int() (int, error) {
-	if !n.Exists() {
+	if n == nil || n == undef {
 		return 0, ErrNodeDoesNotExist
 	}
-	if n.kind != Number {
-		return 0, ErrValueIsNotInteger
+	fv, ok := n.value.(float64)
+	if !ok {
+		return 0, ErrValueIsNotNumber
 	}
-	fv := n.value.(float64)
 	v := int(fv)
 	if fv != float64(v) {
 		return 0, ErrValueIsNotInteger
 	}
-	return int(v), nil
+	return v, nil
 }
