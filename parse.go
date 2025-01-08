@@ -14,8 +14,8 @@ var (
 	ErrDuplicateKey = errors.New("duplicate key")
 )
 
-// ParseStream converts the bytes stream to tree and returns the top node of the tree
-func ParseStream(stream io.Reader) (*Node, error) {
+// Parse converts the bytes stream to tree and returns the top node of the tree
+func Parse(stream io.Reader) (*Node, error) {
 	dec := json.NewDecoder(stream)
 
 	var parent *Node
@@ -86,16 +86,16 @@ func ParseStream(stream io.Reader) (*Node, error) {
 	return node, nil
 }
 
-// Parse converts json string to tree and returns the top node of the tree
-func Parse(s string) (*Node, error) {
+// ParseString converts json string to tree and returns the top node of the tree
+func ParseString(s string) (*Node, error) {
 	stream := strings.NewReader(s)
-	return ParseStream(stream)
+	return Parse(stream)
 }
 
 // ParseBytes converts json bytes to tree and returns the top node of the tree
 func ParseBytes(b []byte) (*Node, error) {
 	stream := bytes.NewReader(b)
-	return ParseStream(stream)
+	return Parse(stream)
 }
 
 // ParseFile converts json file contents to tree and returns the top node of the tree
@@ -105,5 +105,5 @@ func ParseFile(name string) (*Node, error) {
 		return nil, err
 	}
 	defer f.Close()
-	return ParseStream(f)
+	return Parse(f)
 }

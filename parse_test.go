@@ -6,37 +6,37 @@ import (
 )
 
 func TestParseSingle(t *testing.T) {
-	node, err := Parse(`"foo"`)
+	node, err := ParseString(`"foo"`)
 	assertParsed(t, node, err)
 	assertString(t, "foo", node)
 
-	node, err = Parse(`true`)
+	node, err = ParseString(`true`)
 	assertParsed(t, node, err)
 	assertBool(t, true, node)
 
-	node, err = Parse(`100`)
+	node, err = ParseString(`100`)
 	assertParsed(t, node, err)
 	assertInt(t, 100, node)
 
-	node, err = Parse(`100.1`)
+	node, err = ParseString(`100.1`)
 	assertParsed(t, node, err)
 	assertNumber(t, 100.1, node)
 
-	node, err = Parse(`null`)
+	node, err = ParseString(`null`)
 	assertParsed(t, node, err)
 	assertEqual(t, true, node.IsNull())
 
-	node, err = Parse(`{}`)
+	node, err = ParseString(`{}`)
 	assertParsed(t, node, err)
 	assertEqual(t, true, node.IsObject())
 
-	node, err = Parse(`[]`)
+	node, err = ParseString(`[]`)
 	assertParsed(t, node, err)
 	assertEqual(t, true, node.IsArray())
 }
 
 func TestParsePlainObject(t *testing.T) {
-	node, err := Parse(`{"key1":"value1", "key2": false, "key3":  20, "key4": null}`)
+	node, err := ParseString(`{"key1":"value1", "key2": false, "key3":  20, "key4": null}`)
 	assertParsed(t, node, err)
 	assertEqual(t, Object, node.Type())
 	assertEqual(t, 4, len(node.children))
@@ -66,7 +66,7 @@ func TestParsePlainObject(t *testing.T) {
 }
 
 func TestParsePlainArray(t *testing.T) {
-	node, err := Parse(`["value1", false, 20, null]`)
+	node, err := ParseString(`["value1", false, 20, null]`)
 	assertParsed(t, node, err)
 	assertEqual(t, Array, node.Type())
 	assertEqual(t, 4, len(node.children))
@@ -92,7 +92,7 @@ func TestParsePlainArray(t *testing.T) {
 }
 
 func TestParseNested(t *testing.T) {
-	node, err := Parse(`[20, ["v1", "v2"], {"k1": "ov1", "k2": {"kk1": true}}]`)
+	node, err := ParseString(`[20, ["v1", "v2"], {"k1": "ov1", "k2": {"kk1": true}}]`)
 	assertParsed(t, node, err)
 	assertEqual(t, Array, node.Type())
 	assertEqual(t, 3, len(node.children))
@@ -110,7 +110,7 @@ func TestIncorrectJson(t *testing.T) {
 		`{"k1": "v1", "k2": {"kk1": "vv1"}}}`,
 	}
 	for _, s := range inputs {
-		_, err := Parse(s)
+		_, err := ParseString(s)
 		if !errors.Is(err, ErrInvalidJson) {
 			t.Fatal("expected ErrInvalid json")
 		}
@@ -119,7 +119,7 @@ func TestIncorrectJson(t *testing.T) {
 
 func TestDuplicateKey(t *testing.T) {
 
-	_, err := Parse(`{"k1": "v1", "k1": "v2"}`)
+	_, err := ParseString(`{"k1": "v1", "k1": "v2"}`)
 	if !errors.Is(err, ErrDuplicateKey) {
 		t.Fatal("expected ErrDuplicateKey error")
 	}

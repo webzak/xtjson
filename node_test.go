@@ -5,7 +5,7 @@ import (
 )
 
 func TestIdx(t *testing.T) {
-	node, err := Parse(`["aa", "bb", "cc"]`)
+	node, err := ParseString(`["aa", "bb", "cc"]`)
 	assertParsed(t, node, err)
 	assertEqual(t, node.children[0], node.Idx(0))
 	assertEqual(t, undef, node.Idx(20))
@@ -17,7 +17,7 @@ func TestIdx(t *testing.T) {
 }
 
 func TestKey(t *testing.T) {
-	node, err := Parse(`{"ka":"va", "kb":"vb", "kc":"vc"}`)
+	node, err := ParseString(`{"ka":"va", "kb":"vb", "kc":"vc"}`)
 	assertParsed(t, node, err)
 	assertEqual(t, node.children[1], node.Key("kb"))
 	assertEqual(t, undef, node.Key("foo"))
@@ -28,7 +28,7 @@ func TestKey(t *testing.T) {
 }
 
 func TestLevel(t *testing.T) {
-	node, err := Parse(`{"ka":"va", "kb":[1,2,3,{"kc":2}]}`)
+	node, err := ParseString(`{"ka":"va", "kb":[1,2,3,{"kc":2}]}`)
 	assertParsed(t, node, err)
 	assertEqual(t, 0, node.Level())
 	assertEqual(t, 1, node.Key("ka").Level())
@@ -41,7 +41,7 @@ func TestLevel(t *testing.T) {
 }
 
 func TestExists(t *testing.T) {
-	node, err := Parse(`{"key":"foo"}`)
+	node, err := ParseString(`{"key":"foo"}`)
 	assertParsed(t, node, err)
 	assertEqual(t, true, node.Key("key").Exists())
 	assertEqual(t, false, node.Key("wrong").Exists())
@@ -53,7 +53,7 @@ func TestExists(t *testing.T) {
 }
 
 func TestIsParent(t *testing.T) {
-	node, err := Parse(`[123]`)
+	node, err := ParseString(`[123]`)
 	assertParsed(t, node, err)
 	assertEqual(t, true, node.IsParent())
 	assertEqual(t, false, node.Idx(0).IsParent())
@@ -64,7 +64,7 @@ func TestIsParent(t *testing.T) {
 }
 
 func TestIsScalar(t *testing.T) {
-	node, err := Parse(`[123]`)
+	node, err := ParseString(`[123]`)
 	assertParsed(t, node, err)
 	assertEqual(t, false, node.IsScalar())
 	assertEqual(t, true, node.Idx(0).IsScalar())
@@ -75,7 +75,7 @@ func TestIsScalar(t *testing.T) {
 }
 
 func TestType(t *testing.T) {
-	node, err := Parse(`[123]`)
+	node, err := ParseString(`[123]`)
 	assertParsed(t, node, err)
 	assertEqual(t, Array, node.Type())
 	assertEqual(t, Number, node.Idx(0).Type())
@@ -86,7 +86,7 @@ func TestType(t *testing.T) {
 }
 
 func TestSelfIdx(t *testing.T) {
-	node, err := Parse(`[1,2,3]`)
+	node, err := ParseString(`[1,2,3]`)
 	assertParsed(t, node, err)
 	assertEqual(t, 0, node.SelfIdx())
 	assertEqual(t, 0, node.Idx(0).SelfIdx())
@@ -99,7 +99,7 @@ func TestSelfIdx(t *testing.T) {
 }
 
 func TestSelfKey(t *testing.T) {
-	node, err := Parse(`{"foo": 123}`)
+	node, err := ParseString(`{"foo": 123}`)
 	assertParsed(t, node, err)
 	assertEqual(t, "", node.SelfKey())
 	assertEqual(t, "foo", node.Key("foo").SelfKey())
@@ -110,7 +110,7 @@ func TestSelfKey(t *testing.T) {
 }
 
 func TestIsNull(t *testing.T) {
-	node, err := Parse(`[123, null]`)
+	node, err := ParseString(`[123, null]`)
 	assertParsed(t, node, err)
 	assertEqual(t, false, node.Idx(0).IsNull())
 	assertEqual(t, true, node.Idx(1).IsNull())
@@ -121,7 +121,7 @@ func TestIsNull(t *testing.T) {
 }
 
 func TestIsString(t *testing.T) {
-	node, err := Parse(`["abc"]`)
+	node, err := ParseString(`["abc"]`)
 	assertParsed(t, node, err)
 	assertEqual(t, false, node.IsString())
 	assertEqual(t, true, node.Idx(0).IsString())
@@ -132,7 +132,7 @@ func TestIsString(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	node, err := Parse(`["abc"]`)
+	node, err := ParseString(`["abc"]`)
 	assertParsed(t, node, err)
 	v, err := node.String()
 	assertEqual(t, ErrValueIsNotString, err)
@@ -151,7 +151,7 @@ func TestString(t *testing.T) {
 }
 
 func TestIsBool(t *testing.T) {
-	node, err := Parse(`[true]`)
+	node, err := ParseString(`[true]`)
 	assertParsed(t, node, err)
 	assertEqual(t, false, node.IsBool())
 	assertEqual(t, true, node.Idx(0).IsBool())
@@ -162,7 +162,7 @@ func TestIsBool(t *testing.T) {
 }
 
 func TestBool(t *testing.T) {
-	node, err := Parse(`[true]`)
+	node, err := ParseString(`[true]`)
 	assertParsed(t, node, err)
 	v, err := node.Bool()
 	assertEqual(t, ErrValueIsNotBool, err)
@@ -181,7 +181,7 @@ func TestBool(t *testing.T) {
 }
 
 func TestIsNumber(t *testing.T) {
-	node, err := Parse(`[12.4, 100]`)
+	node, err := ParseString(`[12.4, 100]`)
 	assertParsed(t, node, err)
 	assertEqual(t, false, node.IsNumber())
 	assertEqual(t, true, node.Idx(0).IsNumber())
@@ -193,7 +193,7 @@ func TestIsNumber(t *testing.T) {
 }
 
 func TestIsInt(t *testing.T) {
-	node, err := Parse(`[12.4, 100, 100.0]`)
+	node, err := ParseString(`[12.4, 100, 100.0]`)
 	assertParsed(t, node, err)
 	assertEqual(t, false, node.IsInt())
 	assertEqual(t, false, node.Idx(0).IsInt())
@@ -206,7 +206,7 @@ func TestIsInt(t *testing.T) {
 }
 
 func TestNumber(t *testing.T) {
-	node, err := Parse(`[12.4, 12]`)
+	node, err := ParseString(`[12.4, 12]`)
 	assertParsed(t, node, err)
 	v, err := node.Number()
 	assertEqual(t, ErrValueIsNotNumber, err)
@@ -230,7 +230,7 @@ func TestNumber(t *testing.T) {
 }
 
 func TestInt(t *testing.T) {
-	node, err := Parse(`[12.4, 12]`)
+	node, err := ParseString(`[12.4, 12]`)
 	assertParsed(t, node, err)
 	v, err := node.Int()
 	assertEqual(t, ErrValueIsNotNumber, err)

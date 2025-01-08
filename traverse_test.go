@@ -5,7 +5,7 @@ import (
 )
 
 func TestPath(t *testing.T) {
-	node, err := Parse(`[20, ["v1", {"k1": "ov1", "k2": {"kk1": "value"}}]]`)
+	node, err := ParseString(`[20, ["v1", {"k1": "ov1", "k2": {"kk1": "value"}}]]`)
 	assertParsed(t, node, err)
 	assertEqual(t, undef, node.Path(""))
 	assertEqual(t, node, node.Path("$"))
@@ -14,7 +14,7 @@ func TestPath(t *testing.T) {
 	assertEqual(t, "ov1", node.Path("$[1][1].k1").value)
 	assertEqual(t, "value", node.Path("$[1][1].k2.kk1").value)
 
-	node, err = Parse(`{"k1": ["v1", "v2", {"kk1": "vv1"}], "k2": "foo"}`)
+	node, err = ParseString(`{"k1": ["v1", "v2", {"kk1": "vv1"}], "k2": "foo"}`)
 	assertParsed(t, node, err)
 	assertEqual(t, "foo", node.Path("$.k2").value)
 	assertEqual(t, Array, node.Path("$.k1").Type())
@@ -24,7 +24,7 @@ func TestPath(t *testing.T) {
 }
 
 func TestSelfPath(t *testing.T) {
-	node, err := Parse(`[20, ["v1", {"k1": "ov1", "k2": {"kk1": true}}]]`)
+	node, err := ParseString(`[20, ["v1", {"k1": "ov1", "k2": {"kk1": true}}]]`)
 	assertParsed(t, node, err)
 	assertEqual(t, "$[1][1].k2.kk1", node.Idx(1).Idx(1).Key("k2").Key("kk1").SelfPath())
 	node = nil
@@ -34,7 +34,7 @@ func TestSelfPath(t *testing.T) {
 }
 
 func TestParent(t *testing.T) {
-	node, err := Parse(`[20]`)
+	node, err := ParseString(`[20]`)
 	assertParsed(t, node, err)
 	assertEqual(t, undef, node.Parent())
 	assertEqual(t, node, node.Idx(0).Parent())
@@ -45,7 +45,7 @@ func TestParent(t *testing.T) {
 }
 
 func TestIsAncestorOf(t *testing.T) {
-	root, err := Parse(`{"ka":"va", "kb":"vb", "kc":[1,2,{"x":"x"}]}`)
+	root, err := ParseString(`{"ka":"va", "kb":"vb", "kc":[1,2,{"x":"x"}]}`)
 	assertParsed(t, root, err)
 	kb := root.Key("kb")
 	kc := root.Key("kc")
@@ -56,7 +56,7 @@ func TestIsAncestorOf(t *testing.T) {
 }
 
 func TestChildren(t *testing.T) {
-	node, err := Parse(`[20, 21]`)
+	node, err := ParseString(`[20, 21]`)
 	assertParsed(t, node, err)
 	assertEqual(t, 2, len(node.Children()))
 	assertEqual(t, 0, len(node.Idx(0).Children()))
@@ -67,7 +67,7 @@ func TestChildren(t *testing.T) {
 }
 
 func TestChildrenKeys(t *testing.T) {
-	node, err := Parse(`{"ka":"va", "kb":"vb", "kc":[1,2,3]}`)
+	node, err := ParseString(`{"ka":"va", "kb":"vb", "kc":[1,2,3]}`)
 	assertParsed(t, node, err)
 	assertEqual(t, []string{"ka", "kb", "kc"}, node.ChildrenKeys())
 	assertEqual(t, 0, len(node.Key("kc").ChildrenKeys()))
@@ -78,7 +78,7 @@ func TestChildrenKeys(t *testing.T) {
 }
 
 func TestChildrenLength(t *testing.T) {
-	node, err := Parse(`{"ka":"va", "kb":"vb", "kc":[1,2,3]}`)
+	node, err := ParseString(`{"ka":"va", "kb":"vb", "kc":[1,2,3]}`)
 	assertParsed(t, node, err)
 	assertEqual(t, 3, node.ChildrenLength())
 	assertEqual(t, 0, node.Key("kb").ChildrenLength())
@@ -90,7 +90,7 @@ func TestChildrenLength(t *testing.T) {
 }
 
 func TestWalker(t *testing.T) {
-	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kkb3":[]}`)
+	root, err := ParseString(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kkb3":[]}`)
 	assertParsed(t, root, err)
 	walker, err := NewWalker(root, 0)
 	assertNil(t, err)
@@ -153,7 +153,7 @@ func TestWalker(t *testing.T) {
 }
 
 func TestWalkerSkip(t *testing.T) {
-	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kc":123}`)
+	root, err := ParseString(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kc":123}`)
 	assertParsed(t, root, err)
 	walker, err := NewWalker(root, 0)
 	assertNil(t, err)
@@ -183,7 +183,7 @@ func TestWalkerSkip(t *testing.T) {
 }
 
 func TestWalkerWithDeepLevel(t *testing.T) {
-	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kkb3":[]}`)
+	root, err := ParseString(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kkb3":[]}`)
 	assertParsed(t, root, err)
 	walker, err := NewWalker(root, 1)
 	assertNil(t, err)
@@ -226,7 +226,7 @@ func TestWalkerWithDeepLevel(t *testing.T) {
 }
 
 func TestWalkerStartDeeper(t *testing.T) {
-	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kkb3":[]}`)
+	root, err := ParseString(`{"ka":"va", "kb":{"kkb1":"kkv1", "kkb2":[1,2]}, "kkb3":[]}`)
 	assertParsed(t, root, err)
 	root = root.Key("kb")
 	walker, err := NewWalker(root, 2)
@@ -270,7 +270,7 @@ func TestWalkerStartDeeper(t *testing.T) {
 }
 
 func TestCopy(t *testing.T) {
-	root, err := Parse(`{"ka":"va","kb":{"kkb1":"kkv1","kkb2":[1,2]},"kkb3":[]}`)
+	root, err := ParseString(`{"ka":"va","kb":{"kkb1":"kkv1","kkb2":[1,2]},"kkb3":[]}`)
 	assertParsed(t, root, err)
 	sub := root.Key("kb").Copy()
 	assertNil(t, sub.parent)

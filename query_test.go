@@ -6,7 +6,7 @@ import (
 )
 
 func TestSearch(t *testing.T) {
-	root, err := Parse(`[{"a":1,"b":2},{"a":2,"b":3},{"a":3,"b":4},{"a":4,"b":5}]`)
+	root, err := ParseString(`[{"a":1,"b":2},{"a":2,"b":3},{"a":3,"b":4},{"a":4,"b":5}]`)
 	assertNil(t, err)
 
 	ns, err := root.Search(NodeMatcherFunc(func(n *Node) bool {
@@ -24,7 +24,7 @@ func TestSearch(t *testing.T) {
 }
 
 func TestSearchKey(t *testing.T) {
-	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "ka": 25}, "kc":123}`)
+	root, err := ParseString(`{"ka":"va", "kb":{"kkb1":"kkv1", "ka": 25}, "kc":123}`)
 	assertNil(t, err)
 	ns, err := root.SearchKey("ka", nil)
 	assertNil(t, err)
@@ -35,7 +35,7 @@ func TestSearchKey(t *testing.T) {
 }
 
 func TestSearchWithMatcherFunc(t *testing.T) {
-	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "ka": 25}, "kc":123}`)
+	root, err := ParseString(`{"ka":"va", "kb":{"kkb1":"kkv1", "ka": 25}, "kc":123}`)
 	assertNil(t, err)
 
 	ns, err := root.Search(NodeMatcherFunc(func(n *Node) bool {
@@ -49,7 +49,7 @@ func TestSearchWithMatcherFunc(t *testing.T) {
 }
 
 func TestQueryPipe(t *testing.T) {
-	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "ka": 25}, "kc":[1,2,3],"kd":{"kkd":{"kkb1":222}}}`)
+	root, err := ParseString(`{"ka":"va", "kb":{"kkb1":"kkv1", "ka": 25}, "kc":[1,2,3],"kd":{"kkd":{"kkb1":222}}}`)
 	assertNil(t, err)
 	ns, err := root.QueryPipe("$.kb", "${...}")
 	assertNil(t, err)
@@ -94,7 +94,7 @@ func TestParseQuery(t *testing.T) {
 }
 
 func TestQuery(t *testing.T) {
-	root, err := Parse(`{"ka":"va", "kb":{"kkb1":"kkv1", "ka": 25}, "kc":[1,2,3],"kd":{"kkd":{"kkb1":222}}}`)
+	root, err := ParseString(`{"ka":"va", "kb":{"kkb1":"kkv1", "ka": 25}, "kc":[1,2,3],"kd":{"kkd":{"kkb1":222}}}`)
 	assertNil(t, err)
 	ns, err := root.Query("$.kb{...}")
 	assertNil(t, err)

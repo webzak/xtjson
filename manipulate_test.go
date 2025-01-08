@@ -47,7 +47,7 @@ func TestNewInt(t *testing.T) {
 }
 
 func TestAppend(t *testing.T) {
-	root, err := Parse(`[1,2]`)
+	root, err := ParseString(`[1,2]`)
 	assertParsed(t, root, err)
 	node := NewString("s1")
 	err = root.Append(node)
@@ -69,7 +69,7 @@ func TestAppend(t *testing.T) {
 }
 
 func TestAppendString(t *testing.T) {
-	root, err := Parse(`["a","b"]`)
+	root, err := ParseString(`["a","b"]`)
 	assertParsed(t, root, err)
 	err = root.AppendString("foo")
 	assertNil(t, err)
@@ -77,7 +77,7 @@ func TestAppendString(t *testing.T) {
 }
 
 func TestAppendBool(t *testing.T) {
-	root, err := Parse(`["a","b"]`)
+	root, err := ParseString(`["a","b"]`)
 	assertParsed(t, root, err)
 	err = root.AppendBool(true)
 	assertNil(t, err)
@@ -85,7 +85,7 @@ func TestAppendBool(t *testing.T) {
 }
 
 func TestAppendNumber(t *testing.T) {
-	root, err := Parse(`["a","b"]`)
+	root, err := ParseString(`["a","b"]`)
 	assertParsed(t, root, err)
 	err = root.AppendNumber(2.111)
 	assertNil(t, err)
@@ -93,7 +93,7 @@ func TestAppendNumber(t *testing.T) {
 }
 
 func TestAppendInt(t *testing.T) {
-	root, err := Parse(`["a","b"]`)
+	root, err := ParseString(`["a","b"]`)
 	assertParsed(t, root, err)
 	err = root.AppendInt(22)
 	assertNil(t, err)
@@ -101,7 +101,7 @@ func TestAppendInt(t *testing.T) {
 }
 
 func TestAppendNull(t *testing.T) {
-	root, err := Parse(`["a","b"]`)
+	root, err := ParseString(`["a","b"]`)
 	assertParsed(t, root, err)
 	err = root.AppendNull()
 	assertNil(t, err)
@@ -109,7 +109,7 @@ func TestAppendNull(t *testing.T) {
 }
 
 func TestSet(t *testing.T) {
-	root, err := Parse(`{"a":1}`)
+	root, err := ParseString(`{"a":1}`)
 	assertParsed(t, root, err)
 	node := NewString("foo")
 	err = root.Set("k", node)
@@ -141,7 +141,7 @@ func TestSet(t *testing.T) {
 		t.Fatal("expected error ErrInvalidNodeForOperation")
 	}
 
-	root, err = Parse(`{"a":0,"b":1,"c":2,"d":3,"e":4}`)
+	root, err = ParseString(`{"a":0,"b":1,"c":2,"d":3,"e":4}`)
 	assertParsed(t, root, err)
 	node = NewString("foo")
 	err = root.Set("c", node)
@@ -152,7 +152,7 @@ func TestSet(t *testing.T) {
 }
 
 func TestSetString(t *testing.T) {
-	root, err := Parse(`{"a":"b"}`)
+	root, err := ParseString(`{"a":"b"}`)
 	assertParsed(t, root, err)
 	err = root.SetString("c", "d")
 	assertNil(t, err)
@@ -160,7 +160,7 @@ func TestSetString(t *testing.T) {
 }
 
 func TestSetBool(t *testing.T) {
-	root, err := Parse(`{"a":"b"}`)
+	root, err := ParseString(`{"a":"b"}`)
 	assertParsed(t, root, err)
 	err = root.SetBool("c", false)
 	assertNil(t, err)
@@ -168,7 +168,7 @@ func TestSetBool(t *testing.T) {
 }
 
 func TestSetNumber(t *testing.T) {
-	root, err := Parse(`{"a":"b"}`)
+	root, err := ParseString(`{"a":"b"}`)
 	assertParsed(t, root, err)
 	err = root.SetNumber("c", 23.23)
 	assertNil(t, err)
@@ -176,7 +176,7 @@ func TestSetNumber(t *testing.T) {
 }
 
 func TestSetInt(t *testing.T) {
-	root, err := Parse(`{"a":"b"}`)
+	root, err := ParseString(`{"a":"b"}`)
 	assertParsed(t, root, err)
 	err = root.SetInt("c", 23)
 	assertNil(t, err)
@@ -184,7 +184,7 @@ func TestSetInt(t *testing.T) {
 }
 
 func TestSetNull(t *testing.T) {
-	root, err := Parse(`{"a":"b"}`)
+	root, err := ParseString(`{"a":"b"}`)
 	assertParsed(t, root, err)
 	err = root.SetNull("c")
 	assertNil(t, err)
@@ -192,7 +192,7 @@ func TestSetNull(t *testing.T) {
 }
 
 func TestRemoveIdx(t *testing.T) {
-	root, err := Parse(`["a","b","c","d","e"]`)
+	root, err := ParseString(`["a","b","c","d","e"]`)
 	assertParsed(t, root, err)
 
 	err = root.RemoveIdx(4)
@@ -229,7 +229,7 @@ func TestRemoveIdx(t *testing.T) {
 }
 
 func TestRemoveKey(t *testing.T) {
-	root, err := Parse(`{"a":0,"b":1,"c":2,"d":3,"e":4}`)
+	root, err := ParseString(`{"a":0,"b":1,"c":2,"d":3,"e":4}`)
 	assertParsed(t, root, err)
 
 	err = root.RemoveKey("e")
@@ -266,7 +266,7 @@ func TestRemoveKey(t *testing.T) {
 }
 
 func TestRemove(t *testing.T) {
-	root, err := Parse(`["a","b","c","d","e"]`)
+	root, err := ParseString(`["a","b","c","d","e"]`)
 	assertParsed(t, root, err)
 
 	node := root.Idx(2)
@@ -279,7 +279,7 @@ func TestRemove(t *testing.T) {
 		t.Fatal("expected error ErrNoParent")
 	}
 
-	root, err = Parse(`{"a":"b","c":"d","e":"f"}`)
+	root, err = ParseString(`{"a":"b","c":"d","e":"f"}`)
 	assertParsed(t, root, err)
 
 	node = root.Key("c")
@@ -290,7 +290,7 @@ func TestRemove(t *testing.T) {
 }
 
 func TestReplaceIdx(t *testing.T) {
-	root, err := Parse(`["a","b","c","d","e"]`)
+	root, err := ParseString(`["a","b","c","d","e"]`)
 	assertParsed(t, root, err)
 	err = root.ReplaceIdx(100, NewNull())
 	if !errors.Is(err, ErrInvalidIndex) {
@@ -305,14 +305,14 @@ func TestReplaceIdx(t *testing.T) {
 }
 
 func TestReplace(t *testing.T) {
-	root, err := Parse(`["a","b","c","d","e"]`)
+	root, err := ParseString(`["a","b","c","d","e"]`)
 	assertParsed(t, root, err)
 	node := root.Idx(1)
 	err = node.Replace(NewNull())
 	assertNil(t, err)
 	assertEqual(t, `["a",null,"c","d","e"]`, root.Stringify())
 
-	root, err = Parse(`{"a":"b","c":"d","e":"f"}`)
+	root, err = ParseString(`{"a":"b","c":"d","e":"f"}`)
 	assertParsed(t, root, err)
 	node = root.Key("e")
 	err = node.Replace(NewNull())
@@ -321,7 +321,7 @@ func TestReplace(t *testing.T) {
 }
 
 func TestReplaceByType(t *testing.T) {
-	root, err := Parse(`["a","b","c","d","e"]`)
+	root, err := ParseString(`["a","b","c","d","e"]`)
 	assertParsed(t, root, err)
 	err = root.Idx(0).ReplaceByString("aaa")
 	assertNil(t, err)
@@ -337,7 +337,7 @@ func TestReplaceByType(t *testing.T) {
 }
 
 func TestSortKeys(t *testing.T) {
-	root, err := Parse(`{"c":"c","a":"a","b":"b"}`)
+	root, err := ParseString(`{"c":"c","a":"a","b":"b"}`)
 	assertParsed(t, root, err)
 	err = root.SortKeys()
 	assertNil(t, err)
@@ -345,7 +345,7 @@ func TestSortKeys(t *testing.T) {
 }
 
 func TestSortTreeKeys(t *testing.T) {
-	root, err := Parse(`[1,{"c":"c","a":"a","d":"d","b":{"n":"n","f":"f"}}]`)
+	root, err := ParseString(`[1,{"c":"c","a":"a","d":"d","b":{"n":"n","f":"f"}}]`)
 	assertParsed(t, root, err)
 	err = root.SortTreeKeys()
 	assertNil(t, err)
