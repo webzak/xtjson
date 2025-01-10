@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -16,11 +17,6 @@ var (
 // Reader interface
 type Reader interface {
 	Read() (*Node, error)
-}
-
-// NamedReader interface
-type NamedReader interface {
-	NamedRead() (string, *Node, error)
 }
 
 // FindFiles recursively searches for the files in specified root dir
@@ -52,30 +48,28 @@ func FindFiles(path, pattern string) ([]string, error) {
 
 // DirReader provides Reader and NamedReader interfaces to read and parse files in directory
 type DirReader struct {
-	files []string
-	next  int
+	basePath string
+	files    []string
+	next     int
 }
 
 // NewDirReader creates new directory reader
 func NewDirReader(path string, pattern string) (*DirReader, error) {
 	var dr DirReader
 	var err error
+	switch {
+	case len(path) >= 2 && path[0:2] == "./":
+		dr.basePath = path[2:] + "/"
+	case len(path) == 1 && path[0] == '.':
+		dr.basePath = ""
+	default:
+		dr.basePath = path
+	}
 	dr.files, err = FindFiles(path, pattern)
 	if err != nil {
 		return nil, err
 	}
 	return &dr, nil
-}
-
-// NamedRead returns the name of next parsed file and root node of parsed tree
-func (dr *DirReader) NamedRead() (string, *Node, error) {
-	if dr.next >= len(dr.files) {
-		return "", nil, io.EOF
-	}
-	name := dr.files[dr.next]
-	dr.next++
-	node, err := ParseFile(name)
-	return name, node, err
 }
 
 // Read gets next pased tree
@@ -85,5 +79,10 @@ func (dr *DirReader) Read() (*Node, error) {
 	}
 	name := dr.files[dr.next]
 	dr.next++
-	return ParseFile(name)
+	node, err := ParseFile(name)
+	if dr.basePath != "" {
+		name, _ = strings.CutPrefix(name, dr.basePath)
+	}
+	node.key = name
+	return node, err
 }

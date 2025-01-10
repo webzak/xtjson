@@ -189,17 +189,17 @@ func (n *Node) Exists() bool {
 	return n != nil && n != undef
 }
 
-// SelfIdx returns the index of current node if it is a member of array
+// SelfIdx returns the index of current node
 func (n *Node) SelfIdx() int {
-	if n == nil || n.parent == nil || !n.parent.IsArray() {
+	if n == nil {
 		return 0
 	}
 	return n.idx
 }
 
-// SelfKey returns the key of current node if it is a member of object
+// SelfKey returns the key of current node
 func (n *Node) SelfKey() string {
-	if n == nil || n.parent == nil || !n.parent.IsObject() {
+	if n == nil {
 		return ""
 	}
 	return n.key
