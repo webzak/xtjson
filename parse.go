@@ -14,21 +14,17 @@ var (
 	ErrDuplicateKey = errors.New("duplicate key")
 )
 
-// Parse converts the bytes stream to tree and returns the top node of the tree
-func Parse(stream io.Reader) (*Node, error) {
-	dec := json.NewDecoder(stream)
+func parse(dec *json.Decoder) (*Node, error) {
 
 	var parent *Node
 	var node *Node
 	var key string
 	var keySet bool
 	var setParent bool
+	var level int
 
 	for {
 		token, err := dec.Token()
-		if err == io.EOF {
-			break
-		}
 		if err != nil {
 			return nil, errors.Join(ErrInvalidJson, err)
 		}
@@ -39,12 +35,18 @@ func Parse(stream io.Reader) (*Node, error) {
 			case '{':
 				node = &Node{value: make(keymap)}
 				setParent = true
+				level++
 			case '[':
 				node = &Node{value: Array}
 				setParent = true
+				level++
 			case '}', ']':
 				if parent != nil {
 					parent, node = parent.parent, parent
+				}
+				level--
+				if level < 0 {
+					return nil, ErrInvalidJson
 				}
 			}
 		case string:
@@ -60,7 +62,7 @@ func Parse(stream io.Reader) (*Node, error) {
 			node = &Node{value: Null}
 		}
 
-		if node.parent == nil {
+		if node != nil && node.parent == nil {
 			node.parent = parent
 			if parent.IsObject() {
 				node.key = key
@@ -79,8 +81,25 @@ func Parse(stream io.Reader) (*Node, error) {
 			parent = node
 			setParent = false
 		}
+		if level <= 0 {
+			break
+		}
 	}
-	if node.parent != nil {
+	if node != nil && node.parent != nil {
+		return nil, ErrInvalidJson
+	}
+	return node, nil
+}
+
+// Parse converts the bytes stream to tree and returns the top node of the tree
+func Parse(stream io.Reader) (*Node, error) {
+	decoder := json.NewDecoder(stream)
+	node, err := parse(decoder)
+	if err != nil {
+		return nil, err
+	}
+	_, err = decoder.Token()
+	if err != io.EOF {
 		return nil, ErrInvalidJson
 	}
 	return node, nil
